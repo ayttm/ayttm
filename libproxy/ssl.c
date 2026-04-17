@@ -29,6 +29,11 @@
 #include "ssl.h"
 #include "ssl_certificate.h"
 
+/* OpenSSL >= 1.1.1 is required (enforced in configure.ac and meson.build).
+ * TLS 1.3 support (TLS1_3_VERSION) requires OpenSSL 1.1.1+.
+ * Threading is handled internally by OpenSSL 1.1.0+; no locking callbacks
+ * needed. SSL_library_init() and SSL_load_error_strings() are no-ops. */
+
 #include "debug.h"
 #include <string.h>
 #include "globals.h"
@@ -36,44 +41,15 @@
 
 static gboolean ssl_inited = FALSE;
 
-static GMutex **ssl_mutex = NULL;
-
-static void locking_function(int mode, int n, const char *file, int line)
-{
-	if (mode & CRYPTO_LOCK)
-		g_mutex_lock(ssl_mutex[n]);
-	else
-		g_mutex_unlock(ssl_mutex[n]);
-}
-
-static unsigned long id_function(void)
-{
-	return (unsigned long)g_thread_self();
-}
-
 /* Global system initialization */
 void ssl_init(void)
 {
-	int num_locks = 0, i = 0;
 	static GStaticMutex ssl_init_lock = G_STATIC_MUTEX_INIT;
 
 	g_static_mutex_lock(&ssl_init_lock);
 
 	if (ssl_inited)
 		return;
-
-	SSL_library_init();
-	SSL_load_error_strings();
-
-	num_locks = CRYPTO_num_locks();
-
-	ssl_mutex = g_new0(GMutex *, num_locks);
-
-	for (i = 0; i < num_locks; i++)
-		ssl_mutex[i] = g_mutex_new();
-
-	CRYPTO_set_locking_callback(locking_function);
-	CRYPTO_set_id_callback(id_function);
 
 	ssl_inited = TRUE;
 
@@ -83,24 +59,39 @@ void ssl_init(void)
 SSL *ssl_get_socket(int sock, const char *host, int port, void *data)
 {
 	SSL_CTX *ssl_ctx = NULL;
-	SSL_METHOD *meth;
 
 	if (!ssl_inited)
 		ssl_init();
 
-	/* Create our context */
-	meth = SSLv23_client_method();
-	ssl_ctx = SSL_CTX_new(meth);
+	/* Use TLS_client_method() which supports TLS 1.2+ only.
+	 * SSLv23_client_method() is deprecated in OpenSSL 1.1.0 and
+	 * removed in OpenSSL 3.x; it also allowed negotiation of
+	 * obsolete protocol versions (SSLv2, SSLv3). */
+	ssl_ctx = SSL_CTX_new(TLS_client_method());
+	if (ssl_ctx == NULL) {
+		eb_debug(DBG_CORE, "Error creating SSL context\n");
+		return NULL;
+	}
+
+	/* Enforce a minimum of TLS 1.2 — TLS 1.0 and 1.1 are deprecated
+	 * (RFC 8996) and should not be negotiated. */
+	SSL_CTX_set_min_proto_version(ssl_ctx, TLS1_2_VERSION);
 
 	/* Set default certificate paths */
 	SSL_CTX_set_default_verify_paths(ssl_ctx);
 
-#if (OPENSSL_VERSION_NUMBER < 0x0090600fL)
-	SSL_CTX_set_verify_depth(ssl_ctx, 1);
-#endif
+	/* Require peer certificate verification to prevent MITM attacks.
+	 * Connections to servers with invalid or untrusted certificates
+	 * will be rejected at SSL_connect() time. */
+	SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
 
-	return ssl_init_socket_with_method(sock, host, port, ssl_ctx,
-		SSL_METHOD_SSLv23, data);
+	{
+		SSL *ret = ssl_init_socket_with_method(sock, host, port, ssl_ctx,
+			SSL_METHOD_TLS, data);
+		/* SSL* holds its own reference to ssl_ctx; release ours now. */
+		SSL_CTX_free(ssl_ctx);
+		return ret;
+	}
 }
 
 SSL *ssl_init_socket_with_method(int sock, const char *host, int port,
@@ -118,15 +109,23 @@ SSL *ssl_init_socket_with_method(int sock, const char *host, int port,
 	}
 
 	switch (method) {
-	case SSL_METHOD_SSLv23:
-		eb_debug(DBG_CORE, "Setting SSLv23 client method\n");
-		SSL_set_ssl_method(ssl, SSLv23_client_method());
+	case SSL_METHOD_TLSv1_2:
+		eb_debug(DBG_CORE, "Setting TLS 1.2 client method\n");
+		SSL_set_ssl_method(ssl, TLS_client_method());
+		SSL_set_min_proto_version(ssl, TLS1_2_VERSION);
+		SSL_set_max_proto_version(ssl, TLS1_2_VERSION);
 		break;
-	case SSL_METHOD_TLSv1:
-		eb_debug(DBG_CORE, "Setting TLSv1 client method\n");
-		SSL_set_ssl_method(ssl, TLSv1_client_method());
+	case SSL_METHOD_TLSv1_3:
+		eb_debug(DBG_CORE, "Setting TLS 1.3 client method\n");
+		SSL_set_ssl_method(ssl, TLS_client_method());
+		SSL_set_min_proto_version(ssl, TLS1_3_VERSION);
+		SSL_set_max_proto_version(ssl, TLS1_3_VERSION);
 		break;
+	case SSL_METHOD_TLS:
 	default:
+		eb_debug(DBG_CORE, "Setting TLS client method (>= 1.2)\n");
+		SSL_set_ssl_method(ssl, TLS_client_method());
+		SSL_set_min_proto_version(ssl, TLS1_2_VERSION);
 		break;
 	}
 

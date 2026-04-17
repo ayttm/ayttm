@@ -348,7 +348,11 @@ char *ssl_certificate_check_signer(X509 *cert)
 		X509_STORE_free(store);
 		return g_strdup(_("Can't create X509_STORE_CTX"));
 	}
-	X509_STORE_CTX_init(store_ctx, store, cert, NULL);
+	if (!X509_STORE_CTX_init(store_ctx, store, cert, NULL)) {
+		X509_STORE_CTX_free(store_ctx);
+		X509_STORE_free(store);
+		return g_strdup(_("Can't initialize X509_STORE_CTX"));
+	}
 
 	if (!X509_verify_cert(store_ctx)) {
 		err_msg =

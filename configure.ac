@@ -284,14 +284,14 @@ AC_TRY_LINK([#include <openssl/opensslv.h>],
     [have_openssl=yes], [have_openssl=no])
 
 if test "$have_openssl" = yes; then
-	AC_MSG_CHECKING([for OpenSSL >= 1.1.0])
+	AC_MSG_CHECKING([for OpenSSL >= 1.1.1])
 	AC_TRY_COMPILE([#include <openssl/opensslv.h>
-		#if OPENSSL_VERSION_NUMBER < 0x10100000L
+		#if OPENSSL_VERSION_NUMBER < 0x1010100fL
 		#  error "too old"
 		#endif], [],
 		[AC_MSG_RESULT([yes])],
 		[AC_MSG_RESULT([no])
-		 AC_MSG_ERROR([OpenSSL >= 1.1.0 is required (1.0.x is end-of-life)])])
+		 AC_MSG_ERROR([OpenSSL >= 1.1.1 is required (TLS 1.3 support needs 1.1.1+)])])
 	EB_LIBS="$EB_LIBS $SSL_LIBDIR -lssl -lcrypto"
 	EB_CFLAGS="$EB_CFLAGS $SSL_INCLUDES"
 	AC_DEFINE(HAVE_OPENSSL, 1, [Define if you have openssl])

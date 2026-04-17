@@ -43,8 +43,12 @@ extern "C" {
 #endif
 
 	typedef enum {
-		SSL_METHOD_SSLv23,
-		SSL_METHOD_TLSv1
+		SSL_METHOD_TLS,       /* TLS (any negotiated version >= TLS 1.2) */
+		SSL_METHOD_TLSv1_2,   /* TLS 1.2 explicitly */
+		SSL_METHOD_TLSv1_3,   /* TLS 1.3 explicitly */
+		/* Legacy names kept for source compatibility */
+		SSL_METHOD_SSLv23 = SSL_METHOD_TLS,
+		SSL_METHOD_TLSv1  = SSL_METHOD_TLSv1_2,
 	} SSLMethod;
 
 	int ssl_read(SSL *ssl, char *buf, int len);
