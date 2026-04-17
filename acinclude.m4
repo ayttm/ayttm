@@ -235,3 +235,39 @@ AC_DEFUN([AM_PATH_GPGME],
   AC_SUBST(GPGME_LIBS)
 ])
 
+dnl AX_CHECK_COMPILE_FLAG(FLAG, [ACTION-IF-SUPPORTED], [ACTION-IF-NOT], [EXTRA-FLAGS])
+dnl Test whether the C compiler accepts FLAG. Runs ACTION-IF-SUPPORTED if it
+dnl does, ACTION-IF-NOT if it does not.  EXTRA-FLAGS are appended during the
+dnl test (e.g., -Werror to turn warnings into errors).
+AC_DEFUN([AX_CHECK_COMPILE_FLAG], [
+  AC_PREREQ(2.59)dnl
+  AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_cflags_[]AS_TR_SH([$4])_[]AS_TR_SH([$1])])dnl
+  AC_CACHE_CHECK([whether $CC accepts $1], CACHEVAR, [
+    ax_check_save_flags=$CFLAGS
+    CFLAGS="$CFLAGS $4 $1"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
+      [AS_VAR_SET(CACHEVAR,[yes])],
+      [AS_VAR_SET(CACHEVAR,[no])])
+    CFLAGS=$ax_check_save_flags])
+  AS_VAR_IF(CACHEVAR, yes,
+    [m4_default([$2], :)],
+    [m4_default([$3], :)])
+  AS_VAR_POPDEF([CACHEVAR])dnl
+])
+
+AC_DEFUN([AX_CHECK_LINK_FLAG], [
+  AC_PREREQ(2.59)dnl
+  AS_VAR_PUSHDEF([CACHEVAR],[ax_cv_check_ldflags_[]AS_TR_SH([$1])])dnl
+  AC_CACHE_CHECK([whether the linker accepts $1], CACHEVAR, [
+    ax_check_save_ldflags=$LDFLAGS
+    LDFLAGS="$LDFLAGS $1"
+    AC_LINK_IFELSE([AC_LANG_PROGRAM()],
+      [AS_VAR_SET(CACHEVAR,[yes])],
+      [AS_VAR_SET(CACHEVAR,[no])])
+    LDFLAGS=$ax_check_save_ldflags])
+  AS_VAR_IF(CACHEVAR, yes,
+    [m4_default([$2], :)],
+    [m4_default([$3], :)])
+  AS_VAR_POPDEF([CACHEVAR])dnl
+])
+

@@ -406,6 +406,43 @@ if test "$enable_all_warnings" = yes; then
 	CXXFLAGS="$CXXFLAGS -Wall"
 fi
 
+dnl Hardening flags: always apply _FORTIFY_SOURCE and stack protection
+dnl in non-debug builds.  These catch common buffer overflows at runtime
+dnl with negligible performance cost.
+AC_ARG_ENABLE(hardening, AC_HELP_STRING([--disable-hardening],
+		[disable compiler hardening flags (not recommended)]),
+		[enable_hardening=$enableval], [enable_hardening=yes])
+
+if test "$enable_hardening" = yes; then
+	dnl -D_FORTIFY_SOURCE=2 requires -O1 or higher; guard against -O0.
+	AX_CHECK_COMPILE_FLAG([-D_FORTIFY_SOURCE=2],
+		[CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
+		 CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"],, [-Werror])
+	AX_CHECK_COMPILE_FLAG([-fstack-protector-strong],
+		[CFLAGS="$CFLAGS -fstack-protector-strong"
+		 CXXFLAGS="$CXXFLAGS -fstack-protector-strong"],, [-Werror])
+	dnl Position-independent executable support
+	AX_CHECK_COMPILE_FLAG([-fPIE],
+		[CFLAGS="$CFLAGS -fPIE"
+		 CXXFLAGS="$CXXFLAGS -fPIE"
+		 AX_CHECK_LINK_FLAG([-pie],
+			[EB_LDFLAGS="$EB_LDFLAGS -pie"])],, [-Werror])
+fi
+
+dnl Optional AddressSanitizer + UBSan for debug/developer builds.
+dnl Enable with: ./configure --enable-sanitizers
+AC_ARG_ENABLE(sanitizers, AC_HELP_STRING([--enable-sanitizers],
+		[enable AddressSanitizer and UndefinedBehaviorSanitizer (for developers; do not use in production)]))
+
+if test "$enable_sanitizers" = yes; then
+	AX_CHECK_COMPILE_FLAG([-fsanitize=address,undefined],
+		[CFLAGS="$CFLAGS -fsanitize=address,undefined -fno-omit-frame-pointer"
+		 CXXFLAGS="$CXXFLAGS -fsanitize=address,undefined -fno-omit-frame-pointer"
+		 EB_LDFLAGS="$EB_LDFLAGS -fsanitize=address,undefined"],
+		[AC_MSG_WARN([Compiler does not support -fsanitize=address,undefined; --enable-sanitizers ignored])],
+		[-Werror])
+fi
+
 CFLAGS="$CFLAGS -I\$(top_srcdir)/src"
 CXXFLAGS="$CXXFLAGS"
 EB_LDFLAGS="$EB_LDFLAGS $LDFLAGS  `pkg-config --libs gthread-2.0`"
