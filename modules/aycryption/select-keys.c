@@ -533,7 +533,7 @@ static void select_btn_cb(GtkWidget *widget, gpointer data)
 		sk->num_keys++;
 
 		sk->okay = 1;
-		sk->key = strdup(s);
+		sk->key = g_strdup(s);
 		gtk_main_quit();
 
 	}

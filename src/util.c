@@ -67,7 +67,7 @@
 #endif
 
 /* bug 929347 */
-LList *nick_modify_utility = NULL;
+GList *nick_modify_utility = NULL;
 
 int clean_pid(void *dummy)
 {
@@ -194,9 +194,9 @@ char *unescape_string(const char *input)
 	int ipos = 0, opos = 0;
 
 	if (!input)
-		return strdup("");
+		return g_strdup("");
 
-	result = malloc((strlen(input) + 1) * sizeof(char));
+	result = g_malloc((strlen(input) + 1) * sizeof(char));
 
 	while (input && input[ipos]) {
 		char c = input[ipos++];
@@ -437,7 +437,7 @@ char *ay_smilify_filter(Conversation *conv, const char *s)
 			get_service_name(conv->local_user->service_id));
 	}
 
-	return strdup(s);
+	return g_strdup(s);
 }
 
 char *ay_convert_eol_filter(Conversation *conv, char *text)
@@ -469,7 +469,7 @@ static grouplist *dummy_group = NULL;
 */
 eb_local_account *find_local_account_for_remote(eb_account *remote, int online)
 {
-	static LList *node = NULL;
+	static GList *node = NULL;
 	static eb_account *last_remote = NULL;
 
 	/* If this is a normal call, start at the top and give the first, otherwise continue where we left off */
@@ -503,7 +503,7 @@ eb_local_account *find_local_account_for_remote(eb_account *remote, int online)
 int connected_local_accounts(void)
 {
 	int n = 0;
-	LList *node = NULL;
+	GList *node = NULL;
 
 	for (node = accounts; node; node = node->next) {
 		eb_local_account *ela = node->data;
@@ -519,7 +519,7 @@ int connected_local_accounts(void)
 eb_local_account *find_suitable_local_account(eb_local_account *first,
 	int second)
 {
-	LList *node;
+	GList *node;
 
 	if (first && (first->connected || first->connecting))
 		return first;
@@ -569,7 +569,7 @@ eb_local_account *find_suitable_local_account_for_remote(eb_account *ea,
 
 eb_account *can_offline_message(struct contact *con)
 {
-	LList *node;
+	GList *node;
 	for (node = con->accounts; node; node = node->next) {
 		eb_account *ea = node->data;
 
@@ -582,7 +582,7 @@ eb_account *can_offline_message(struct contact *con)
 eb_account *find_suitable_remote_account(eb_account *first,
 	struct contact *rest)
 {
-	LList *node;
+	GList *node;
 	eb_account *possibility = NULL;
 
 	if (first && RUN_SERVICE(first)->query_connected(first)
@@ -614,7 +614,7 @@ eb_account *find_suitable_remote_account(eb_account *first,
 eb_account *find_suitable_file_transfer_account(eb_account *first,
 	struct contact *rest)
 {
-	LList *node;
+	GList *node;
 	eb_account *possibility = NULL;
 
 	if (first == NULL)
@@ -640,7 +640,7 @@ eb_account *find_suitable_file_transfer_account(eb_account *first,
 
 grouplist *find_grouplist_by_name(const char *name)
 {
-	LList *l1;
+	GList *l1;
 
 	if (name == NULL)
 		return NULL;
@@ -654,7 +654,7 @@ grouplist *find_grouplist_by_name(const char *name)
 
 grouplist *find_grouplist_by_nick(char *nick)
 {
-	LList *l1, *l2;
+	GList *l1, *l2;
 
 	if (nick == NULL)
 		return NULL;
@@ -670,7 +670,7 @@ grouplist *find_grouplist_by_nick(char *nick)
 
 struct contact *find_contact_by_handle(const char *handle)
 {
-	LList *l1, *l2, *l3;
+	GList *l1, *l2, *l3;
 
 	if (handle == NULL)
 		return NULL;
@@ -690,7 +690,7 @@ struct contact *find_contact_by_handle(const char *handle)
 
 struct contact *find_contact_by_nick(const char *nick)
 {
-	LList *l1, *l2;
+	GList *l1, *l2;
 
 	if (nick == NULL)
 		return NULL;
@@ -707,7 +707,7 @@ struct contact *find_contact_by_nick(const char *nick)
 
 struct contact *find_contact_in_group_by_nick(const char *nick, grouplist *gl)
 {
-	LList *l;
+	GList *l;
 
 	if (nick == NULL || gl == NULL)
 		return NULL;
@@ -723,7 +723,7 @@ struct contact *find_contact_in_group_by_nick(const char *nick, grouplist *gl)
 static eb_account *find_account_with_id_or_ela(const char *handle,
 	int service_id, eb_local_account *ela)
 {
-	LList *l1, *l2, *l3;
+	GList *l1, *l2, *l3;
 
 	if (handle == NULL)
 		return NULL;
@@ -759,7 +759,7 @@ static eb_account *find_account_with_id_or_ela(const char *handle,
 
 eb_account *find_account_by_handle(const char *handle, int service_id)
 {
-	LList *w = accounts;
+	GList *w = accounts;
 	eb_account *found = NULL;
 	for (; w; w = w->next) {
 		eb_local_account *ela = (eb_local_account *)w->data;
@@ -789,7 +789,7 @@ eb_account *find_account_with_ela(const char *handle, eb_local_account *ela)
 
 eb_local_account *find_local_account_by_handle(const char *handle, int type)
 {
-	LList *l1;
+	GList *l1;
 
 	if (handle == NULL)
 		return NULL;
@@ -896,12 +896,12 @@ int remove_account(eb_account *ea)
 
 	buddy_logoff(ea);
 	remove_account_line(ea);
-	c->accounts = l_list_remove(c->accounts, ea);
+	c->accounts = g_list_remove(c->accounts, ea);
 
 	RUN_SERVICE(ea)->del_user(ea);
 	g_free(ea);
 
-	if (l_list_empty(c->accounts)) {
+	if ((!(c->accounts))) {
 		remove_contact(c);
 		return 0;	/* so if coming from remove_contact 
 				   don't try again to remove_contact_line() 
@@ -918,23 +918,23 @@ void remove_contact(struct contact *c)
 	if (c->conversation)
 		ay_conversation_end(c->conversation);
 
-	while (c->accounts && !l_list_empty(c->accounts))
+	while (c->accounts && !(!(c->accounts)))
 		if (!remove_account(c->accounts->data))
 			return;
 
 	remove_contact_line(c);
-	g->members = l_list_remove(g->members, c);
+	g->members = g_list_remove(g->members, c);
 	g_free(c);
 }
 
 void remove_group(grouplist *g)
 {
-	LList *node = NULL;
+	GList *node = NULL;
 	while (g->members)
 		remove_contact(g->members->data);
 
 	remove_group_line(g);
-	groups = l_list_remove(groups, g);
+	groups = g_list_remove(groups, g);
 
 	for (node = accounts; node; node = node->next) {
 		eb_local_account *ela = (eb_local_account *)(node->data);
@@ -952,14 +952,14 @@ void remove_group(grouplist *g)
 
 void add_group(const char *name)
 {
-	LList *node = NULL;
+	GList *node = NULL;
 	grouplist *eg;
 
-	eg = calloc(1, sizeof(grouplist));
+	eg = g_new0(grouplist, 1);
 
 	strncpy(eg->name, name, sizeof(eg->name));
 
-	groups = l_list_prepend(groups, eg);
+	groups = g_list_prepend(groups, eg);
 	add_group_line(eg);
 
 	for (node = accounts; node; node = node->next) {
@@ -982,7 +982,7 @@ void add_group(const char *name)
 
 void rename_group(grouplist *current_group, const char *new_name)
 {
-	LList *node = NULL;
+	GList *node = NULL;
 	char oldname[NAME_MAX];
 
 	strncpy(oldname, current_group->name, sizeof(oldname));
@@ -1055,10 +1055,10 @@ static void move_account_yn(void *data, int result)
 
 	if (result)
 		move_account(rad->contact, rad->account);
-	else if (l_list_empty(rad->contact->accounts))
+	else if ((!(rad->contact->accounts)))
 		remove_contact(rad->contact);
 
-	free(rad);
+	g_free(rad);
 }
 
 static void add_account_verbose(char *contact, eb_account *ea, int verbosity)
@@ -1092,13 +1092,12 @@ static void add_account_verbose(char *contact, eb_account *ea, int verbosity)
 
 			/* remove this contact if it was newly created */
 			if (verbosity) {
-				rad = calloc(1,
-					sizeof(struct relocate_account_data));
+				rad = g_new0(struct relocate_account_data, 1);
 				rad->account = account;
 				rad->contact = c;
 				eb_do_dialog(buff, _("Error: account exists"),
 					move_account_yn, rad);
-			} else if (c && l_list_empty(c->accounts))
+			} else if (c && (!(c->accounts)))
 				remove_contact(c);
 		}
 		return;
@@ -1109,7 +1108,7 @@ static void add_account_verbose(char *contact, eb_account *ea, int verbosity)
 	}
 	if (c) {
 		c->accounts =
-			l_list_insert_sorted(c->accounts, ea, account_cmp);
+			g_list_insert_sorted(c->accounts, ea, (GCompareFunc)account_cmp);
 		ea->account_contact = c;
 		RUN_SERVICE(ea)->add_user(ea);
 
@@ -1145,13 +1144,13 @@ static void add_contact(const char *group, struct contact *user)
 		eb_debug(DBG_CORE, "Error adding group :(\n");
 		return;
 	}
-	grp->members = l_list_insert_sorted(grp->members, user, contact_cmp);
+	grp->members = g_list_insert_sorted(grp->members, user, (GCompareFunc)contact_cmp);
 	user->group = grp;
 }
 
 static struct contact *create_contact(const char *con, int type)
 {
-	struct contact *c = calloc(1, sizeof(struct contact));
+	struct contact *c = g_new0(struct contact, 1);
 	if (con != NULL)
 		strncpy(c->nick, con, sizeof(c->nick));
 
@@ -1174,18 +1173,18 @@ struct contact *add_dummy_contact(const char *con, eb_account *ea)
 {
 	struct contact *c = create_contact(con, ea->service_id);
 
-	c->accounts = l_list_prepend(c->accounts, ea);
+	c->accounts = g_list_prepend(c->accounts, ea);
 	ea->account_contact = c;
 	ea->icon_handler = ea->status_handler = -1;
 
 	if (!dummy_group) {
-		dummy_group = calloc(1, sizeof(grouplist));
+		dummy_group = g_new0(grouplist, 1);
 		/* don't translate this string */
 		snprintf(dummy_group->name, sizeof(dummy_group->name),
 			"__Ayttm_Dummy_Group__%d__", rand());
 	}
 
-	dummy_group->members = l_list_prepend(dummy_group->members, c);
+	dummy_group->members = g_list_prepend(dummy_group->members, c);
 	c->group = dummy_group;
 	c->online = 1;
 	return c;
@@ -1193,7 +1192,7 @@ struct contact *add_dummy_contact(const char *con, eb_account *ea)
 
 void clean_up_dummies()
 {
-	LList *l, *l2;
+	GList *l, *l2;
 
 	if (!dummy_group)
 		return;
@@ -1204,13 +1203,13 @@ void clean_up_dummies()
 			eb_account *ea = l2->data;
 			if (CAN(ea, free_account_data))
 				RUN_SERVICE(ea)->free_account_data(ea);
-			free(ea);
+			g_free(ea);
 		}
-		l_list_free(c->accounts);
-		free(c);
+		g_list_free(c->accounts);
+		g_free(c);
 	}
-	l_list_free(dummy_group->members);
-	free(dummy_group);
+	g_list_free(dummy_group->members);
+	g_free(dummy_group);
 }
 
 void add_unknown_with_name(eb_account *ea, char *name)
@@ -1218,7 +1217,7 @@ void add_unknown_with_name(eb_account *ea, char *name)
 	struct contact *con = add_new_contact(_("Unknown"),
 		(name && strlen(name)) ? name : ea->handle, ea->service_id);
 
-	con->accounts = l_list_prepend(con->accounts, ea);
+	con->accounts = g_list_prepend(con->accounts, ea);
 	ea->account_contact = con;
 	ea->icon_handler = ea->status_handler = -1;
 	if (find_suitable_local_account_for_remote(ea, NULL))
@@ -1280,19 +1279,19 @@ struct contact *move_account(struct contact *new_con, eb_account *ea)
 
 		if (old_con)
 			old_con->accounts =
-				l_list_remove(old_con->accounts, ea);
+				g_list_remove(old_con->accounts, ea);
 		remove_account_line(ea);
 
 		new_con->accounts =
-			l_list_insert_sorted(new_con->accounts, ea,
-			account_cmp);
+			g_list_insert_sorted(new_con->accounts, ea,
+			(GCompareFunc)account_cmp);
 		ea->account_contact = new_con;
 
-		if (old_con && l_list_empty(old_con->accounts)) {
+		if (old_con && (!(old_con->accounts))) {
 			remove_contact(old_con);
 			old_con = NULL;
 		} else if (old_con) {
-			LList *l;
+			GList *l;
 			old_con->online = 0;
 			for (l = old_con->accounts; l; l = l->next)
 				if (((eb_account *)l->data)->online)
@@ -1320,12 +1319,12 @@ void move_contact(const char *group, struct contact *c)
 {
 	grouplist *g = c->group;
 	struct contact *con;
-	LList *l = c->accounts;
+	GList *l = c->accounts;
 
 	if (!strcasecmp(g->name, group))
 		return;
 
-	g->members = l_list_remove(g->members, c);
+	g->members = g_list_remove(g->members, c);
 	remove_contact_line(c);
 	g = find_grouplist_by_name(group);
 
@@ -1355,7 +1354,7 @@ void move_contact(const char *group, struct contact *c)
 		}
 		return;
 	} else if (!con) {
-		g->members = l_list_insert_sorted(g->members, c, contact_cmp);
+		g->members = g_list_insert_sorted(g->members, c, (GCompareFunc)contact_cmp);
 		c->group = g;
 		add_contact_and_accounts(c);
 		add_contact_line(c);
@@ -1364,7 +1363,7 @@ void move_contact(const char *group, struct contact *c)
 
 void rename_contact(struct contact *c, const char *newname)
 {
-	LList *l = NULL;
+	GList *l = NULL;
 	struct contact *con = NULL;
 
 	if (!c || !strcmp(c->nick, newname))
@@ -1395,7 +1394,7 @@ void rename_contact(struct contact *c, const char *newname)
 		strncpy(c->nick, newname, sizeof(c->nick) - 1);
 		c->nick[sizeof(c->nick) - 1] = '\0';
 
-		c->label = strdup(newname);
+		c->label = g_strdup(newname);
 		update_contact_line(c);
 
 		l = c->accounts;
@@ -1582,19 +1581,19 @@ void eb_generic_menu_function(void *add_button, void *userdata)
  * with this information
  */
 
-LList *get_groups()
+GList *get_groups()
 {
-	LList *node = NULL;
-	LList *newlist = NULL;
+	GList *node = NULL;
+	GList *newlist = NULL;
 
-	for (node = groups; node; node = l_list_next(node))
+	for (node = groups; node; node = g_list_next(node))
 		newlist =
-			l_list_insert_sorted(newlist,
+			g_list_insert_sorted(newlist,
 			((grouplist *)node->data)->name,
 #ifdef _AIX
-			(LListCompFunc) g_strcasecmp
+			(GCompareFunc) g_strcasecmp
 #else
-			(LListCompFunc) strcasecmp
+			(GCompareFunc) strcasecmp
 #endif
 			);
 
@@ -1605,7 +1604,7 @@ void rename_nick_log(char *oldgroup, char *oldnick, const char *newgroup,
 	const char *newnick)
 {
 	/* bug 929347 */
-	LList *utility_walk;
+	GList *utility_walk;
 	char oldnicklog[255], newnicklog[255], buff[NAME_MAX];
 	FILE *test = NULL;
 	make_safe_filename(buff, oldnick, oldgroup);
@@ -1659,7 +1658,7 @@ void rename_nick_log(char *oldgroup, char *oldnick, const char *newgroup,
 
 eb_account *find_account_for_protocol(struct contact *c, int service)
 {
-	LList *l = c->accounts;
+	GList *l = c->accounts;
 	while (l && l->data) {
 		eb_account *a = (eb_account *)l->data;
 		if (a && a->service_id == service)
@@ -1669,27 +1668,27 @@ eb_account *find_account_for_protocol(struct contact *c, int service)
 	return NULL;
 }
 
-GList *llist_to_glist(LList *ll, int free_old)
+GList *llist_to_glist(GList *ll, int free_old)
 {
 	GList *g = NULL;
-	LList *l = ll;
+	GList *l = ll;
 
 	for (; l; l = l->next)
 		g = g_list_append(g, l->data);
 
 	if (free_old)
-		l_list_free(ll);
+		g_list_free(ll);
 
 	return g;
 }
 
-LList *glist_to_llist(GList *gl, int free_old)
+GList *glist_to_llist(GList *gl, int free_old)
 {
-	LList *l = NULL;
+	GList *l = NULL;
 	GList *g = gl;
 
 	for (; g; g = g->next)
-		l = l_list_append(l, g->data);
+		l = g_list_append(l, g->data);
 
 	if (free_old)
 		g_list_free(gl);
@@ -1699,7 +1698,7 @@ LList *glist_to_llist(GList *gl, int free_old)
 
 int send_url(const char *url)
 {
-	LList *node;
+	GList *node;
 	int ret = 0;
 	for (node = accounts; node && !ret; node = node->next) {
 		eb_local_account *ela = node->data;
@@ -1746,14 +1745,14 @@ typedef struct _account_information {
 	char *local_acc;
 } account_information;
 
-LList *ay_save_account_information(int service_id)
+GList *ay_save_account_information(int service_id)
 {
-	LList *saved = NULL;
-	LList *walk = NULL;
+	GList *saved = NULL;
+	GList *walk = NULL;
 
 	for (walk = get_all_contacts(); walk; walk = walk->next) {
 		struct contact *c = (struct contact *)walk->data;
-		LList *accs = c->accounts;
+		GList *accs = c->accounts;
 		for (; accs; accs = accs->next) {
 			eb_account *ea = (eb_account *)accs->data;
 			if (service_id == -1 || ea->service_id == service_id) {
@@ -1761,23 +1760,23 @@ LList *ay_save_account_information(int service_id)
 					g_new0(account_information, 1);
 				ai->ea = ea;
 				if (ea->ela)
-					ai->local_acc = strdup(ea->ela->handle);
+					ai->local_acc = g_strdup(ea->ela->handle);
 				else
 					ai->local_acc = NULL;
 				eb_debug(DBG_CORE,
 					" SAVED { %p(%s), %d, %s }\n", ea,
 					ea->handle, ea->service_id,
 					ea->ela ? ea->ela->handle : "NULL");
-				saved = l_list_append(saved, ai);
+				saved = g_list_append(saved, ai);
 			}
 		}
 	}
 	return saved;
 }
 
-void ay_restore_account_information(LList *saved)
+void ay_restore_account_information(GList *saved)
 {
-	LList *walk = NULL;
+	GList *walk = NULL;
 
 	for (walk = saved; walk; walk = walk->next) {
 		account_information *ai = (account_information *)walk->data;
@@ -1796,13 +1795,13 @@ void ay_restore_account_information(LList *saved)
 		eb_debug(DBG_CORE, " RESTORED { %p(%s), %d, %s(%s) }\n", ea,
 			ea->handle, ea->service_id, ai->local_acc,
 			ea->ela ? ea->ela->handle : "NULL");
-		free(ai->local_acc);
+		g_free(ai->local_acc);
 	}
 }
 
 void ay_dump_cts(void)
 {
-	LList *g = NULL, *c = NULL, *a = NULL;
+	GList *g = NULL, *c = NULL, *a = NULL;
 	for (g = groups; g; g = g->next) {
 		grouplist *gl = (grouplist *)g->data;
 		printf("grouplist %p:\n"
@@ -1899,7 +1898,7 @@ void ay_dump_cts(void)
 
 void ay_dump_elas()
 {
-	LList *la = NULL;
+	GList *la = NULL;
 	for (la = accounts; la; la = la->next) {
 		eb_local_account *ela = (eb_local_account *)la->data;
 		printf("eb_local_account %p:\n"
@@ -2002,7 +2001,7 @@ static void ay_got_version_data(AyConnection *fd, eb_input_condition condition, 
 	} while(read_len > 0 || errno == EAGAIN);
 
 	if(version)
-		outversion->version = strdup(version);
+		outversion->version = g_strdup(version);
 
 	ay_connection_input_remove(outversion->input_tag);
 	ay_connection_free(fd);
@@ -2137,8 +2136,7 @@ char *ay_base64_encode(const unsigned char *in, int len)
 	int i = 0, j = 0;
 
 	unsigned char *out =
-		(unsigned char *)calloc((len + len % 3) * 4 / 3 + 1,
-		sizeof(unsigned char));
+		(unsigned char *)g_malloc0((len + len % 3) * 4 / 3 + 1);
 
 	for (i = 0, j = 0; i < len; i += 3, j += 4) {
 
@@ -2183,7 +2181,7 @@ unsigned char *ay_base64_decode(const char *in, int *len)
 	*len = (inlen * 3 / 4) - less;
 
 	/* Leave space for null termination in case this is just a string */
-	unsigned char *out = (unsigned char *)calloc(*len + 1, sizeof(unsigned char));
+	unsigned char *out = (unsigned char *)g_malloc0(*len + 1);
 
 	for (i = 0, j = 0; i < inlen; i += 4, j += 3) {
 		char tmpin[4] = { 0, 0, 0, 0 };

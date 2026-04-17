@@ -36,25 +36,25 @@ void do_list_dialog(const char *message, const char *title, const char **list,
 	void (*action) (const char *text, void *data), void *data)
 {
 	const char **ptr = list;
-	LList *tmp = NULL;
+	GList *tmp = NULL;
 
 	while (*ptr) {
-		char *t = strdup(*ptr);
+		char *t = g_strdup(*ptr);
 		ptr++;
-		tmp = l_list_append(tmp, t);
+		tmp = g_list_append(tmp, t);
 	}
 
 	do_llist_dialog(message, title, tmp, action, data);
 
 	while (tmp) {
-		LList *t = tmp;
-		free(tmp->data);
-		tmp = l_list_remove_link(tmp, tmp);
-		l_list_free_1(t);
+		GList *t = tmp;
+		g_free(tmp->data);
+		tmp = g_list_remove_link(tmp, tmp);
+		g_list_free_1(t);
 	}
 }
 
-void do_llist_dialog(const char *message, const char *title, const LList *list,
+void do_llist_dialog(const char *message, const char *title, const GList *list,
 	void (*action) (const char *text, void *data), void *data)
 {
 	GtkWidget *dialog;
@@ -68,7 +68,7 @@ void do_llist_dialog(const char *message, const char *title, const LList *list,
 	GtkWidget *scwin;
 	GtkWidget *dialog_content_area;
 
-	const LList *t_list = list;
+	const GList *t_list = list;
 
 	int result = 0;
 

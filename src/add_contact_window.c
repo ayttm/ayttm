@@ -61,9 +61,9 @@ static gint strcasecmp_glist(gconstpointer a, gconstpointer b)
 * with this information
 */
 
-static LList *get_contacts(const gchar *group)
+static GList *get_contacts(const gchar *group)
 {
-	LList *node = NULL, *newlist = NULL;
+	GList *node = NULL, *newlist = NULL;
 	grouplist *g;
 
 	g = find_grouplist_by_name(group);
@@ -72,8 +72,8 @@ static LList *get_contacts(const gchar *group)
 		node = g->members;
 
 	while (node) {
-		newlist = l_list_insert_sorted(newlist,
-			((struct contact *)node->data)->nick, strcasecmp_glist);
+		newlist = g_list_insert_sorted(newlist,
+			((struct contact *)node->data)->nick, (GCompareFunc)strcasecmp_glist);
 		node = node->next;
 	}
 
@@ -97,14 +97,14 @@ void gtk_combo_box_set_active_text(GtkComboBox *combo, gchar *nick,
 	gtk_combo_box_set_active(combo, -1);
 }
 
-LList *get_all_contacts()
+GList *get_all_contacts()
 {
-	LList *node = get_groups();
-	LList *newlist = NULL;
+	GList *node = get_groups();
+	GList *newlist = NULL;
 
 	while (node) {
-		LList *g = get_contacts(node->data);
-		newlist = l_list_concat(newlist, g);
+		GList *g = get_contacts(node->data);
+		newlist = g_list_concat(newlist, g);
 		node = node->next;
 	}
 
@@ -115,9 +115,9 @@ LList *get_all_contacts()
 * this gets a list of all accounts associated with a contact
 */
 
-static LList *get_eb_accounts(gchar *contact)
+static GList *get_eb_accounts(gchar *contact)
 {
-	LList *node = NULL, *newlist = NULL;
+	GList *node = NULL, *newlist = NULL;
 	struct contact *c;
 
 	c = find_contact_by_nick(contact);
@@ -126,29 +126,29 @@ static LList *get_eb_accounts(gchar *contact)
 		node = c->accounts;
 
 	while (node) {
-		newlist = l_list_append(newlist, ((eb_account *)node->data));
+		newlist = g_list_append(newlist, ((eb_account *)node->data));
 		node = node->next;
 	}
 
 	return newlist;
 }
 
-LList *get_all_accounts(int serviceid)
+GList *get_all_accounts(int serviceid)
 {
-	LList *node = get_all_contacts();
-	LList *newlist = NULL;
+	GList *node = get_all_contacts();
+	GList *newlist = NULL;
 
 	while (node) {
-		LList *g =
+		GList *g =
 			get_eb_accounts(((struct contact *)node->data)->nick);
 		while (g) {
 			eb_account *ac = (eb_account *)g->data;
-			LList *next = g->next;
+			GList *next = g->next;
 
 			if (ac->service_id == serviceid)
-				newlist = l_list_append(newlist, ac->handle);
+				newlist = g_list_append(newlist, ac->handle);
 
-			free(g);
+			g_free(g);
 			g = next;
 		}
 		node = node->next;
@@ -312,7 +312,7 @@ static void show_add_defined_contact_window(struct contact *cont,
 	GList *gwalker = NULL;
 	GtkWidget *dialog_content_area;
 
-	LList *walk;
+	GList *walk;
 
 	if (window_open)
 		return;

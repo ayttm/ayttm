@@ -38,7 +38,7 @@
 #include "contact.h"
 #include "conversation.h"
 
-extern LList *chat_window_list;
+extern GList *chat_window_list;
 
 typedef struct _chat_window {
 	GtkWidget *pane;
@@ -72,7 +72,7 @@ typedef struct _chat_window {
 	char *name;
 
 	Conversation *conv;
-	LList *typing_fellows;
+	GList *typing_fellows;
 } chat_window;
 
 /* Struct to hold info used by get_local_accounts to hold callback info */

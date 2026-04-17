@@ -81,29 +81,29 @@ unsigned int module_version()
 
 static int middle_init(void)
 {
-	input_list *il = calloc(1, sizeof(input_list));
+	input_list *il = g_new0(input_list, 1);
 	plugin_info.prefs = il;
 
 	il->widget.checkbox.value = &s_doLeet;
 	il->name = "s_doLeet";
-	il->label = strdup(_("Enable L33t-speak conversion"));
+	il->label = g_strdup(_("Enable L33t-speak conversion"));
 	il->type = EB_INPUT_CHECKBOX;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.checkbox.value = &s_doExtremeLeet;
 	il->name = "s_doExtremeLeet";
-	il->label = strdup(_("Enable 3x7r3m3 L33t-speak [implies previous]"));
+	il->label = g_strdup(_("Enable 3x7r3m3 L33t-speak [implies previous]"));
 	il->type = EB_INPUT_CHECKBOX;
 
 	eb_debug(DBG_MOD, "L33tSp33k initialised\n");
 
 	outgoing_message_filters_local =
-		l_list_prepend(outgoing_message_filters_local, &plstripHTML);
+		g_list_prepend(outgoing_message_filters_local, &plstripHTML);
 	outgoing_message_filters_remote =
-		l_list_prepend(outgoing_message_filters_remote, &plstripHTML);
+		g_list_prepend(outgoing_message_filters_remote, &plstripHTML);
 	incoming_message_filters =
-		l_list_append(incoming_message_filters, &plstripHTML);
+		g_list_append(incoming_message_filters, &plstripHTML);
 
 	return (0);
 }
@@ -112,15 +112,15 @@ static int middle_finish(void)
 {
 	eb_debug(DBG_MOD, "L33tSp33k shutting down\n");
 	outgoing_message_filters_local =
-		l_list_remove(outgoing_message_filters_local, &plstripHTML);
+		g_list_remove(outgoing_message_filters_local, &plstripHTML);
 	outgoing_message_filters_remote =
-		l_list_remove(outgoing_message_filters_remote, &plstripHTML);
+		g_list_remove(outgoing_message_filters_remote, &plstripHTML);
 	incoming_message_filters =
-		l_list_remove(incoming_message_filters, &plstripHTML);
+		g_list_remove(incoming_message_filters, &plstripHTML);
 
 	while (plugin_info.prefs) {
 		input_list *il = plugin_info.prefs->next;
-		free(plugin_info.prefs);
+		g_free(plugin_info.prefs);
 		plugin_info.prefs = il;
 	}
 

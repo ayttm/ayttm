@@ -141,11 +141,11 @@ void edit_contact_window_new(struct contact *c)
 		gtk_widget_show(hbox);
 
 		{
-			LList *l, *l2;
+			GList *l, *l2;
 			int i, def = 0;
 			service_list = gtk_combo_box_new_text();
 			l2 = get_service_list();
-			for (i = 0, l = l2; l; i++, l = l_list_next(l)) {
+			for (i = 0, l = l2; l; i++, l = g_list_next(l)) {
 				char *label = l->data;
 				gtk_combo_box_append_text(GTK_COMBO_BOX
 					(service_list), label);
@@ -154,7 +154,7 @@ void edit_contact_window_new(struct contact *c)
 						label))
 					def = i;
 			}
-			l_list_free(l2);
+			g_list_free(l2);
 
 			gtk_combo_box_set_active(GTK_COMBO_BOX(service_list),
 				def);
@@ -198,15 +198,15 @@ void edit_contact_window_new(struct contact *c)
 	g_snprintf(buff, 1024, _("%s - Edit Contact"), c->nick);
 	gtk_window_set_title(GTK_WINDOW(edit_contact_window), buff);
 	{
-		LList *l, *l2;
+		GList *l, *l2;
 		int i, def = 0;
 		l2 = get_service_list();
-		for (i = 0, l = l2; l; i++, l = l_list_next(l)) {
+		for (i = 0, l = l2; l; i++, l = g_list_next(l)) {
 			char *label = l->data;
 			if (!strcmp(eb_services[c->default_chatb].name, label))
 				def = i;
 		}
-		l_list_free(l2);
+		g_list_free(l2);
 
 		gtk_combo_box_set_active(GTK_COMBO_BOX(service_list), def);
 	}

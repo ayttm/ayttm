@@ -34,11 +34,11 @@
 extern "C" {
 #endif
 	typedef struct _AyModulePrefs {
-		LList *services;
-		LList *filters;
-		LList *utilities;
-		LList *smileys;
-		LList *importers;
+		GList *services;
+		GList *filters;
+		GList *utilities;
+		GList *smileys;
+		GList *importers;
 	} AyModulePrefs;
 
 
@@ -72,7 +72,7 @@ extern "C" {
 	void cSetLocalPref(const char *key, const char *data);
 	char *cGetLocalPref(const char *key);
 
-	void save_account_info(const char *service, LList *pairs);
+	void save_account_info(const char *service, GList *pairs);
 
 	AyModulePrefs *ay_prefs_sift_modules(void);
 	void ay_prefs_modules_free(AyModulePrefs *modules);

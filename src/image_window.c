@@ -57,7 +57,6 @@ void ay_image_window_close(int tag)
 #include "intl.h"
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf-loader.h>
-#include "llist.h"
 #include "mem_util.h"
 
 #include "globals.h"
@@ -75,12 +74,12 @@ struct ay_image_wnd {
 };
 
 static int last_tag = 0;
-static LList *images = NULL;
+static GList *images = NULL;
 
 static struct ay_image_wnd *get_image_wnd_by_tag(int tag)
 {
-	LList *l;
-	for (l = images; l; l = l_list_next(l)) {
+	GList *l;
+	for (l = images; l; l = g_list_next(l)) {
 		struct ay_image_wnd *aiw = l->data;
 		if (aiw->tag == tag)
 			return aiw;
@@ -96,7 +95,7 @@ static void ay_image_window_destroy(GtkWidget *widget, gpointer data)
 	if (!aiw)
 		return;
 
-	images = l_list_remove(images, aiw);
+	images = g_list_remove(images, aiw);
 
 	if (aiw->loader_open) {
 		gdk_pixbuf_loader_close(aiw->loader, &error);
@@ -168,7 +167,7 @@ int ay_image_window_new(int width, int height, const char *title,
 	aiw->callback = callback;
 	aiw->callback_data = callback_data;
 
-	images = l_list_prepend(images, aiw);
+	images = g_list_prepend(images, aiw);
 
 	g_signal_connect(wndImage, "destroy",
 		G_CALLBACK(ay_image_window_destroy), aiw);
@@ -211,7 +210,7 @@ int ay_image_window_add_data(int tag, const unsigned char *buf, long count,
 	aiw->loader = gdk_pixbuf_loader_new();
 	gdk_pixbuf_loader_write(aiw->loader, jpg_buf, count, &error);
 	gdk_pixbuf_loader_close(aiw->loader, &error);
-	free(jpg_buf);
+	g_free(jpg_buf);
 
 	pixbuf = gdk_pixbuf_loader_get_pixbuf(aiw->loader);
 
@@ -271,7 +270,7 @@ static int _cycle(void *data)
 	size = ftell(img);
 	fseek(img, 0, SEEK_SET);
 
-	in_img = malloc(size);
+	in_img = g_malloc(size);
 	fprintf(stderr, "Wanted %d, got %d\n", size, fread(in_img, 1, size,
 			img));
 	fclose(img);
@@ -279,7 +278,7 @@ static int _cycle(void *data)
 	ay_image_window_add_data(tag, in_img, size, 1);
 	ay_image_window_add_data(tag, 0, 0, 0);
 
-	free(in_img);
+	g_free(in_img);
 
 	i++;
 

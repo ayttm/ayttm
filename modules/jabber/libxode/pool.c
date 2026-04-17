@@ -48,13 +48,13 @@ HASHTABLE pool__disturbed = NULL;
 void *_pool__malloc(size_t size)
 {
 	pool__total++;
-	return malloc(size);
+	return g_malloc(size);
 }
 
 void _pool__free(void *block)
 {
 	pool__total--;
-	free(block);
+	g_free(block);
 }
 #else
 #define _pool__malloc malloc

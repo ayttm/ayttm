@@ -41,7 +41,7 @@ struct contact {
 	int gpg_do_encryption;
 	int gpg_do_signature;
 	trigger_struct trigger;
-	LList *accounts;
+	GList *accounts;
 	int expanded;
 	int online;
 	int send_offline;

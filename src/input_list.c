@@ -41,9 +41,9 @@ static void s_convert_space_to_underscore(char *inStr)
 		*ptr = '_';
 }
 
-LList *eb_input_to_value_pair(input_list *il)
+GList *eb_input_to_value_pair(input_list *il)
 {
-	LList *vp = NULL;
+	GList *vp = NULL;
 	char key[MAX_PREF_NAME_LEN];
 	char value[MAX_PREF_LEN];
 
@@ -90,7 +90,7 @@ LList *eb_input_to_value_pair(input_list *il)
 	return (vp);
 }
 
-void eb_update_from_value_pair(input_list *il, LList *vp)
+void eb_update_from_value_pair(input_list *il, GList *vp)
 {
 	char key[MAX_PREF_NAME_LEN];
 
@@ -162,6 +162,6 @@ void eb_update_from_value_pair(input_list *il, LList *vp)
 
 		il = il->next;
 		if (value)
-			free(value);
+			g_free(value);
 	}
 }

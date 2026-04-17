@@ -382,7 +382,7 @@ static int play_arts_file(gchar *soundfile)
 	artsStream =
 		arts_play_stream(sampleRate, sampleWidth, channelCount,
 		"EVERYBUDDY");
-	buf = (char *)malloc(BUFFERED_FRAME_COUNT * frameSize);
+	buf = (char *)g_malloc(BUFFERED_FRAME_COUNT * frameSize);
 	count = afReadFrames(fd, AF_DEFAULT_TRACK, buf, BUFFERED_FRAME_COUNT);
 	do {
 		err = arts_write(artsStream, buf, count * frameSize);
@@ -396,7 +396,7 @@ static int play_arts_file(gchar *soundfile)
 	} while ((count =
 			afReadFrames(fd, AF_DEFAULT_TRACK, buf,
 				BUFFERED_FRAME_COUNT)) && (err >= 0));
-	free(buf);
+	g_free(buf);
 	arts_close_stream(artsStream);
 
 	afCloseFile(fd);

@@ -64,8 +64,8 @@ struct service eb_services[255];
 /* Called when a service module changes */
 static void refresh_service_contacts(int type)
 {
-	LList *l1, *l2, *l3;
-	LList *config = NULL;
+	GList *l1, *l2, *l3;
+	GList *config = NULL;
 	struct contact *con = NULL;
 
 	eb_debug(DBG_CORE, ">Refreshing contacts for %i\n", type);
@@ -121,14 +121,14 @@ static void refresh_service_contacts(int type)
 
 static void reload_service_accounts(int service_id)
 {
-	LList *node = accounts;
-	LList *account_pairs = NULL;
+	GList *node = accounts;
+	GList *account_pairs = NULL;
 	eb_local_account *oela = NULL;
 	eb_local_account *nela = NULL;
 	const int buffer_size = 256;
 	char buff[buffer_size];
 	char buff2[buffer_size];
-	LList *saved_info = NULL;
+	GList *saved_info = NULL;
 
 	saved_info = ay_save_account_information(service_id);
 	while (node) {
@@ -155,20 +155,20 @@ static void reload_service_accounts(int service_id)
 			nela->service_id = oela->service_id;
 			node->data = nela;
 			/* FIXME: This should probably be left to the service to clean up, though at this point, it may not exist */
-			free(oela->protocol_local_account_data);
-			free(oela);
+			g_free(oela->protocol_local_account_data);
+			g_free(oela);
 		}
 		node = node->next;
 	}
 	ay_restore_account_information(saved_info);
-	l_list_free(saved_info);
+	g_list_free(saved_info);
 }
 
 /* Add a new service, or replace an existing one */
 int add_service(struct service *Service_Info)
 {
 	int i;
-	LList *session_prefs = NULL;
+	GList *session_prefs = NULL;
 
 	assert(Service_Info);
 
@@ -183,7 +183,7 @@ int add_service(struct service *Service_Info)
 		if (!strcasecmp(eb_services[i].name, Service_Info->name)) {
 			eb_debug(DBG_CORE, "Replacing %s service ",
 				Service_Info->name);
-			free(eb_services[i].sc);
+			g_free(eb_services[i].sc);
 			Service_Info->protocol_id = i;
 			eb_debug(DBG_CORE, "(service_id %d)\n",
 				Service_Info->protocol_id);
@@ -224,7 +224,7 @@ int get_service_id(const char *servicename)
 	memcpy(&eb_services[NUM_SERVICES], &nomodule_SERVICE_INFO,
 		sizeof(struct service));
 	eb_services[NUM_SERVICES].sc = eb_nomodule_query_callbacks();
-	eb_services[NUM_SERVICES].name = strdup(servicename);
+	eb_services[NUM_SERVICES].name = g_strdup(servicename);
 	eb_services[NUM_SERVICES].protocol_id = NUM_SERVICES;
 	NUM_SERVICES++;
 	snprintf(buf, sizeof(buf), "%s::path", servicename);
@@ -246,14 +246,14 @@ static int strcasecmp_list(const void *a, const void *b)
 	return strcasecmp((const char *)a, (const char *)b);
 }
 
-LList *get_service_list()
+GList *get_service_list()
 {
-	LList *newlist = NULL;
+	GList *newlist = NULL;
 	int i;
 	for (i = 0; i < NUM_SERVICES; i++)
 		newlist =
-			l_list_insert_sorted(newlist, eb_services[i].name,
-			strcasecmp_list);
+			g_list_insert_sorted(newlist, eb_services[i].name,
+			(GCompareFunc)strcasecmp_list);
 
 	return newlist;
 }
@@ -262,7 +262,7 @@ void serv_touch_idle()
 {
 	/* Are we idle?  If so, not anymore */
 	if (is_idle > 0) {
-		LList *node;
+		GList *node;
 		is_idle = 0;
 		for (node = accounts; node; node = node->next) {
 			if (((eb_local_account *)(node->data))->connected
@@ -281,7 +281,7 @@ static guint idle_time = 0;
 
 static int report_idle(void *data)
 {
-	LList *node;
+	GList *node;
 
 	if (!is_idle)
 		return FALSE;
@@ -310,7 +310,7 @@ static int check_idle()
 		XScreenSaverQueryInfo(GDK_DISPLAY(),
 			DefaultRootWindow(GDK_DISPLAY()), mit_info);
 		idle_time = mit_info->idle / 1000;
-		free(mit_info);
+		g_free(mit_info);
 	} else
 #endif
 	{
@@ -324,7 +324,7 @@ static int check_idle()
 
 	if ((idle_time >= 600) && sendIdleTime) {
 		if (is_idle == 0) {
-			LList *node;
+			GList *node;
 			idle_reporter =
 				eb_timeout_add(60000, report_idle, NULL);
 			for (node = accounts; node; node = node->next) {

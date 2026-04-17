@@ -82,7 +82,7 @@ static int custom_msg_tag = 0;
 
 static int plugin_init()
 {
-	input_list *il = calloc(1, sizeof(input_list));
+	input_list *il = g_new0(input_list, 1);
 
 	plugin_info.prefs = il;
 	il->widget.entry.value = custom_away_msg;
@@ -90,7 +90,7 @@ static int plugin_init()
 	il->label = _("Custom Away _File:");
 	il->type = EB_INPUT_ENTRY;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.checkbox.value = &enable_plugin;
 	il->name = "enable_plugin";
@@ -111,7 +111,7 @@ static int plugin_finish()
 	}
 	while (plugin_info.prefs) {
 		input_list *il = plugin_info.prefs->next;
-		free(plugin_info.prefs);
+		g_free(plugin_info.prefs);
 		plugin_info.prefs = il;
 	}
 
@@ -124,7 +124,7 @@ static int plugin_finish()
 
 static void set_away(char *a_message)
 {
-	LList *list;
+	GList *list;
 
 	for (list = accounts; list; list = list->next) {
 		eb_local_account *ela = list->data;

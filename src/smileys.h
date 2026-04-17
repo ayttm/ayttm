@@ -41,9 +41,9 @@ typedef struct smiley_struct smiley;
 
 #if defined(__MINGW32__) && defined(__IN_PLUGIN__)
 __declspec(dllimport)
-LList *smileys;
+GList *smileys;
 #else
-extern LList *smileys;
+extern GList *smileys;
 #endif
 
 #ifdef __cplusplus
@@ -52,34 +52,34 @@ extern "C" {
 
 	typedef struct {
 		const char *set_name;	/* name of the set [key] */
-		LList *set_smiley_list;	/* the list of (struct smiley_struct) which make up the set */
+		GList *set_smiley_list;	/* the list of (struct smiley_struct) which make up the set */
 	} t_smiley_set;
 
-	typedef LList t_smiley_set_list;	/* a list of t_smiley_set */
+	typedef GList t_smiley_set_list;	/* a list of t_smiley_set */
 
-	void ay_add_smiley_set(const char *inName, LList *inSmileyList);
+	void ay_add_smiley_set(const char *inName, GList *inSmileyList);
 	t_smiley_set_list *ay_get_smiley_sets(void);
 	t_smiley_set *ay_lookup_smiley_set(const char *inName);
 	void ay_remove_smiley_set(const char *inName);
 
 	void init_smileys(void);
 
-	gchar *eb_smilify(const char *text, LList *protocol_smileys,
+	gchar *eb_smilify(const char *text, GList *protocol_smileys,
 		const char *service);
 
-	LList *eb_default_smileys(void);
+	GList *eb_default_smileys(void);
 
 #if defined(__MINGW32__) && defined(__IN_PLUGIN__)
 	 __declspec(dllimport)
 #endif
-	LList *add_smiley(LList *list, const char *name, const char **data,
+	GList *add_smiley(GList *list, const char *name, const char **data,
 		const char *service);
 
-	LList *add_protocol_smiley(LList *list, const char *text,
+	GList *add_protocol_smiley(GList *list, const char *text,
 		const char *name);
 
-/* someone figure out how to do this with LList * const */
-	LList *eb_smileys(void);
+/* someone figure out how to do this with GList * const */
+	GList *eb_smileys(void);
 
 	smiley *get_smiley_by_name(const char *name);
 	smiley *get_smiley_by_name_and_service(const char *name,

@@ -177,18 +177,18 @@ static int update_send_progress(void *data)
 			_("Remote Side Disconnected"));
 		ay_activity_bar_remove(pcd->tag);
 		eb_timeout_remove(pcd->timer);
-		free(pcd);
+		g_free(pcd);
 	} else if (xfer_in_progress == -2) {
 		ay_do_error(_("Ayttm File Transfer"), _("Unable to open file"));
 		ay_activity_bar_remove(pcd->tag);
 		eb_timeout_remove(pcd->timer);
-		free(pcd);
+		g_free(pcd);
 	} else {
 		ay_do_info(_("Ayttm File Transfer"),
 			_("File Sent Successfully"));
 		ay_activity_bar_remove(pcd->tag);
 		eb_timeout_remove(pcd->timer);
-		free(pcd);
+		g_free(pcd);
 	}
 #ifdef HAVE_PTHREAD
 	pthread_mutex_unlock(&mutex);
@@ -243,7 +243,7 @@ static void send_file(char *filename, int s)
 
 	if (!strcmp(accept, "ACCEPT")) {
 		progress_callback_data *pcd =
-			calloc(1, sizeof(progress_callback_data));
+			g_new0(progress_callback_data, 1);
 		char label[1024];
 		xfer_in_progress = 1;
 		fp = fopen(filename, "rb");
@@ -284,7 +284,7 @@ static void get_file2(void *data, int source, eb_input_condition condition)
 
 		xfer_in_progress = 0;
 		eb_input_remove(pcd->input);
-		free(pcd);
+		g_free(pcd);
 	} else {
 		int i;
 		for (i = 0; i < len2; i++) {
@@ -312,7 +312,7 @@ static void accept_file(void *data, int result)
 		fclose(fp);
 		xfer_in_progress = 0;
 		ay_activity_bar_remove(pcd->tag);
-		free(pcd);
+		g_free(pcd);
 	}
 }
 
@@ -324,7 +324,7 @@ static void get_file(int s)
 	char buffer2[1024];
 	char buffer[1024];
 	char buffer3[1024];
-	progress_callback_data *pcd = calloc(1, sizeof(progress_callback_data));
+	progress_callback_data *pcd = g_new0(progress_callback_data, 1);
 	fd_set set;
 
 	fd = accept(s, NULL, NULL);
@@ -370,7 +370,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 	eb_account *remote, char *message)
 {
 	char *ptr;
-	char *buff = strdup(message);
+	char *buff = g_strdup(message);
 
 	ptr = strtok(buff, " ");
 
@@ -391,7 +391,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 			if (hp == NULL) {	/* we don't exist !? */
 				eb_debug(DBG_CORE, "gethostbyname failed: %s\n",
 					strerror(errno));
-				free(buff);
+				g_free(buff);
 				return;
 			}
 			sa.sin_family = hp->h_addrtype;	/* this is our host address */
@@ -399,7 +399,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 			if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {	/* create socket */
 				eb_debug(DBG_CORE, "socket failed: %s\n",
 					strerror(errno));
-				free(buff);
+				g_free(buff);
 				return;
 			}
 			if (bind(s, (struct sockaddr *)&sa,
@@ -407,7 +407,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 				eb_debug(DBG_CORE, "bind failed: %s\n",
 					strerror(errno));
 				close(s);
-				free(buff);
+				g_free(buff);
 				return;	/* bind address to socket */
 			}
 			listen(s, 1);	/* max # of queued connects */
@@ -422,7 +422,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 
 			ptr = strtok(NULL, " ");
 			if (!ptr) {
-				free(buff);
+				g_free(buff);
 				return;
 			}
 
@@ -445,7 +445,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 			remote->account_contact->nick, message);
 	}
 
-	free(buff);
+	g_free(buff);
 }
 
 void eb_update_status(eb_account *remote, const char *message)

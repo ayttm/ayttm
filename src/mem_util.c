@@ -143,7 +143,7 @@ char **ay_strsplit(const char *str, const char *sep, int nelem)
 	}
 
 	if (i < nelem)		/* str didn't end with sep */
-		vector[i++] = strdup(p);
+		vector[i++] = g_strdup(p);
 
 	vector[i] = NULL;
 
@@ -152,7 +152,7 @@ char **ay_strsplit(const char *str, const char *sep, int nelem)
 
 void *ay_memdup(const void *addr, int n)
 {
-	void *new_chunk = malloc(n);
+	void *new_chunk = g_malloc(n);
 	if (new_chunk)
 		memcpy(new_chunk, addr, n);
 	return new_chunk;

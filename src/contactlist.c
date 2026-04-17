@@ -25,8 +25,9 @@
 /*
  * contactlist.c
  */
+
 #include <glib.h>
 
-LList *groups;
-LList *temp_groups;
-LList *accounts;
+GList *groups;
+GList *temp_groups;
+GList *accounts;

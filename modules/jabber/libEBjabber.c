@@ -73,7 +73,7 @@ JABBER_Conn *JCnewConn(void)
 	JABBER_Conn *jnew = NULL;
 
 	/* Create a new connection struct, and put it on the top of the list */
-	jnew = calloc(1, sizeof(JABBER_Conn));
+	jnew = g_new0(JABBER_Conn, 1);
 	jnew->next = Connections;
 	eb_debug(DBG_JBR, "JCnewConn: %p\n", jnew);
 	Connections = jnew;
@@ -181,9 +181,9 @@ void JCfreeServerList(char **list)
 {
 	int count = 0;
 	while (list[count]) {
-		free(list[count++]);
+		g_free(list[count++]);
 	}
-	free(list);
+	g_free(list);
 }
 
 /****************************************
@@ -307,7 +307,7 @@ int JABBER_Login(char *handle, char *passwd, char *host,
 		snprintf(buff, 4096, "Connection to server '%s' failed.", host);
 		JABBERError(buff, _("Jabber Error"));
 		JABBERNotConnected(JConn);
-		free(JConn);
+		g_free(JConn);
 		return (0);
 	} else if (JConn->conn->user == NULL) {
 		snprintf(buff, 4096,
@@ -315,7 +315,7 @@ int JABBER_Login(char *handle, char *passwd, char *host,
 			host);
 		JABBERError(buff, _("Jabber Error"));
 		JABBERNotConnected(JConn);
-		free(JConn);
+		g_free(JConn);
 		return (0);
 	}
 
@@ -394,7 +394,7 @@ int JABBER_SendMessage(JABBER_Conn *JConn, char *handle, char *message)
 int JABBER_AddContact(JABBER_Conn *JConn, char *handle)
 {
 	xmlnode x, y, z;
-	char *jid = strdup(handle), *ojid = jid;
+	char *jid = g_strdup(handle), *ojid = jid;
 	JABBER_Dialog *JD;
 	char *buddy_server = NULL;
 	char **server_list;
@@ -409,7 +409,7 @@ int JABBER_AddContact(JABBER_Conn *JConn, char *handle)
 			if (!buddy_server) {
 				eb_debug(DBG_JBR,
 					"<Something weird, buddy without an '@' or a '.'");
-				free(ojid);
+				g_free(ojid);
 				return (1);
 			}
 		}
@@ -423,7 +423,7 @@ int JABBER_AddContact(JABBER_Conn *JConn, char *handle)
 			if (!server_list) {
 				eb_debug(DBG_JBR,
 					"<No server list found, returning error\n");
-				free(ojid);
+				g_free(ojid);
 				return (1);
 			}
 			JD = calloc(sizeof(JABBER_Dialog), 1);
@@ -432,13 +432,13 @@ int JABBER_AddContact(JABBER_Conn *JConn, char *handle)
 				"Unable to automatically determine which account to use for %s:\n"
 				"Please select the account that can talk to this buddy's server",
 				handle);
-			JD->message = strdup(buffer);
+			JD->message = g_strdup(buffer);
 			JD->callback = j_on_pick_account;
-			JD->requestor = strdup(handle);
+			JD->requestor = g_strdup(handle);
 			JABBERListDialog((const char **)server_list, JD);
-			free(server_list);
+			g_free(server_list);
 			eb_debug(DBG_JBR, "<Creating dialog and leaving\n");
-			free(ojid);
+			g_free(ojid);
 			return (0);
 		}
 	}
@@ -460,7 +460,7 @@ int JABBER_AddContact(JABBER_Conn *JConn, char *handle)
 	jab_send(JConn->conn, x);
 	xmlnode_free(x);
 	eb_debug(DBG_JBR, "<Added contact to %s and leaving\n", JConn->jid);
-	free(ojid);
+	g_free(ojid);
 	return (0);
 }
 
@@ -900,9 +900,9 @@ void j_on_packet_handler(jconn conn, jpacket packet)
 			eb_debug(DBG_JBR, "type: %s\n", type);
 			if (!strcmp(type, "jabber:x:event")) {
 				xmlnode comp = xmlnode_get_tag(x, "composing");
-				char *tfrom = strdup(from);
+				char *tfrom = g_strdup(from);
 				JABBERBuddy_typing(JConn, tfrom, comp ? 1 : 0);
-				free(tfrom);
+				g_free(tfrom);
 			}
 		}
 		x = xmlnode_get_tag(packet->x, "subject");
@@ -1000,17 +1000,17 @@ void j_on_packet_handler(jconn conn, jpacket packet)
 						group, sub, name);
 					if (alias && sub) {
 						JB.jid = strtok(alias, "/");
-						JB.jid = strdup(JB.jid ? JB.
+						JB.jid = g_strdup(JB.jid ? JB.
 							jid : alias);
-						JB.name = name ? strdup(name) : strdup(alias);
-						JB.sub = strdup(sub);
+						JB.name = name ? g_strdup(name) : g_strdup(alias);
+						JB.sub = g_strdup(sub);
 						/* State does not matter */
 						JB.status = JABBER_OFFLINE;
 						JB.JConn = JConn;
 						JABBERAddBuddy(&JB);
-						free(JB.name);
-						free(JB.sub);
-						free(JB.jid);
+						g_free(JB.name);
+						g_free(JB.sub);
+						g_free(JB.jid);
 					}
 				}
 			} else if (!strcmp(ns, NS_DISCOINFO)) {
@@ -1030,15 +1030,15 @@ void j_on_packet_handler(jconn conn, jpacket packet)
 				}
 				if ((JConn->server_features & F_GMAIL_NOTIFY)
 					&& JConn->do_request_gmail) {
-					JB.jid = strdup("mailbox@gmail");
-					JB.name = strdup("GMailbox");
-					JB.sub = strdup("both");
+					JB.jid = g_strdup("mailbox@gmail");
+					JB.name = g_strdup("GMailbox");
+					JB.sub = g_strdup("both");
 					JB.status = JABBER_AWAY;
 					JB.JConn = JConn;
 					JABBERAddBuddy(&JB);
-					free(JB.name);
-					free(JB.sub);
-					free(JB.jid);
+					g_free(JB.name);
+					g_free(JB.sub);
+					g_free(JB.jid);
 					request_new_gmail(JConn, "0");
 				}
 			} else if (!strcmp(ns, "google:mail:notify"))
@@ -1105,7 +1105,7 @@ void j_on_packet_handler(jconn conn, jpacket packet)
 					_
 					("Do you want to try to create the account \"%s\" on the jabber server %s?"),
 					jabber_id->user, jabber_id->server);
-				JD->message = strdup(buff);
+				JD->message = g_strdup(buff);
 				JD->callback = j_on_create_account;
 				JD->JConn = JConn;
 				JABBERDialog(JD);
@@ -1186,16 +1186,16 @@ void j_on_packet_handler(jconn conn, jpacket packet)
 		break;
 	case JPACKET_S10N:
 		if (type) {
-			JD = calloc(1, sizeof(JABBER_Dialog));
+			JD = g_new0(JABBER_Dialog, 1);
 			if (!strcmp(type, "subscribe")) {
 				sprintf(buff,
 					_
 					("%s wants to add you to his friends' list.\n\nDo you want to accept?"),
 					from);
-				JD->message = strdup(buff);
+				JD->message = g_strdup(buff);
 				JD->heading = "Subscribe Request";
 				JD->callback = j_allow_subscribe;
-				JD->requestor = strdup(from);
+				JD->requestor = g_strdup(from);
 				JD->JConn = JConn;
 				JABBERDialog(JD);
 				eb_debug(DBG_JBR,

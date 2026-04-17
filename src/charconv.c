@@ -51,7 +51,7 @@ char *StrToUtf8(const char *in)
 
 	eb_debug(DBG_CORE, "Converting %s\n", in);
 
-	result = (char *)malloc(strlen(in) * 2 + 1);
+	result = (char *)g_malloc(strlen(in) * 2 + 1);
 
 	/* convert a string to UTF-8 Format */
 	for (n = 0; n < strlen(in); n++) {
@@ -87,7 +87,7 @@ char *Utf8ToStr(const char *in)
 	if (in == NULL)
 		return "";
 
-	result = (char *)malloc(strlen(in) + 1);
+	result = (char *)g_malloc(strlen(in) + 1);
 
 	/* convert a string from UTF-8 Format */
 	for (n = 0; n < strlen(in); n++) {

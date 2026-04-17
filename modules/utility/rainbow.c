@@ -95,58 +95,58 @@ unsigned int module_version()
 
 static int rainbow_init()
 {
-	input_list *il = calloc(1, sizeof(input_list));
+	input_list *il = g_new0(input_list, 1);
 	plugin_info.prefs = il;
 
 	il->widget.checkbox.value = &doRainbow;
 	il->name = "doRainbow";
-	il->label = strdup(_("Enable rainbow conversion"));
+	il->label = g_strdup(_("Enable rainbow conversion"));
 	il->type = EB_INPUT_CHECKBOX;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = sstart_r;
 	il->name = "sstart_r";
-	il->label = strdup(_("Starting R value:"));
+	il->label = g_strdup(_("Starting R value:"));
 	il->type = EB_INPUT_ENTRY;
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = sstart_g;
 	il->name = "sstart_g";
-	il->label = strdup(_("Starting G value:"));
+	il->label = g_strdup(_("Starting G value:"));
 	il->type = EB_INPUT_ENTRY;
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = sstart_b;
 	il->name = "sstart_b";
-	il->label = strdup(_("Starting B value:"));
+	il->label = g_strdup(_("Starting B value:"));
 	il->type = EB_INPUT_ENTRY;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = send_r;
 	il->name = "send_r";
-	il->label = strdup(_("Ending R value:"));
+	il->label = g_strdup(_("Ending R value:"));
 	il->type = EB_INPUT_ENTRY;
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = send_g;
 	il->name = "send_g";
-	il->label = strdup(_("Ending G value:"));
+	il->label = g_strdup(_("Ending G value:"));
 	il->type = EB_INPUT_ENTRY;
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = send_b;
 	il->name = "send_b";
-	il->label = strdup(_("Ending B value:"));
+	il->label = g_strdup(_("Ending B value:"));
 	il->type = EB_INPUT_ENTRY;
 
 	eb_debug(DBG_MOD, "Rainbow initialised\n");
 
 	outgoing_message_filters_local =
-		l_list_append(outgoing_message_filters_local, &dorainbow);
+		g_list_append(outgoing_message_filters_local, &dorainbow);
 	outgoing_message_filters_remote =
-		l_list_append(outgoing_message_filters_remote, &dorainbow);
+		g_list_append(outgoing_message_filters_remote, &dorainbow);
 
 	return 0;
 }
@@ -155,13 +155,13 @@ static int rainbow_finish()
 {
 	eb_debug(DBG_MOD, "Rainbow shutting down\n");
 	outgoing_message_filters_local =
-		l_list_remove(outgoing_message_filters_local, &dorainbow);
+		g_list_remove(outgoing_message_filters_local, &dorainbow);
 	outgoing_message_filters_remote =
-		l_list_remove(outgoing_message_filters_remote, &dorainbow);
+		g_list_remove(outgoing_message_filters_remote, &dorainbow);
 
 	while (plugin_info.prefs) {
 		input_list *il = plugin_info.prefs->next;
-		free(plugin_info.prefs);
+		g_free(plugin_info.prefs);
 		plugin_info.prefs = il;
 	}
 

@@ -27,7 +27,6 @@
 #ifndef __CONTACT_UTIL_H__
 #define __CONTACT_UTIL_H__
 
-#include "llist.h"
 #include "account.h"
 #include "contact.h"
 
@@ -74,8 +73,8 @@ void move_account(eb_account *account, struct contact *new_contact);
 int contact_cmp(const void *ct_a, const void *ct_b);
 int account_cmp(const void *a, const void *b);
 int group_cmp(const void *a, const void *b);
-LList *get_group_names(void);
-LList *get_group_contact_names(grouplist *group);
+GList *get_group_names(void);
+GList *get_group_contact_names(grouplist *group);
 
 /* contacts file */
 void write_contacts_to_fh(FILE *fp);

@@ -45,7 +45,7 @@ class AySpellChecker {
 	AySpellChecker();
 	void reload();
 	int check(const char * word);
-	LList * suggest(const char * word);
+	GList * suggest(const char * word);
 	~AySpellChecker();
 };
 
@@ -105,7 +105,7 @@ int AySpellChecker::check(const char * word)
 	return enchant_dict_check(dict, word, -1) == 0 ? 0 : 1;
 }
 
-LList * AySpellChecker::suggest(const char * word)
+GList * AySpellChecker::suggest(const char * word)
 {
 	if(!word || !dict)
 		return NULL;
@@ -140,7 +140,7 @@ int ay_spell_check(const char * word)
 	return speller.check(word);
 }
 
-LList * ay_spell_check_suggest(const char * word)
+GList * ay_spell_check_suggest(const char * word)
 {
 	return speller.suggest(word);
 }
@@ -157,7 +157,7 @@ int ay_spell_check(const char * word)
 	return 1;
 }
 
-LList * ay_spell_check_suggest(const char * word)
+GList * ay_spell_check_suggest(const char * word)
 {
 	return NULL;
 }

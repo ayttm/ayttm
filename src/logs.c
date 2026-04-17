@@ -52,9 +52,9 @@ log_file *ay_log_file_create(const char *inFileName)
 
 	assert(inFileName != NULL);
 
-	new_file = calloc(1, sizeof(log_file));
+	new_file = g_new0(log_file, 1);
 
-	new_file->filename = strdup(inFileName);
+	new_file->filename = g_strdup(inFileName);
 	new_file->log_started = 0;
 	new_file->fp = NULL;
 	new_file->filepos = 0;
@@ -92,7 +92,7 @@ void ay_log_file_message(log_file *ioLogFile, const char *inMessage)
 	if (!ioLogFile || !ioLogFile->fp)
 		return;
 
-	my_message = strdup(inMessage);
+	my_message = g_strdup(inMessage);
 
 	if (stripHTML)
 		strip_html(my_message);
@@ -114,7 +114,7 @@ void ay_log_file_message(log_file *ioLogFile, const char *inMessage)
 
 	fflush(ioLogFile->fp);
 
-	free(my_message);
+	g_free(my_message);
 }
 
 void ay_log_file_close(log_file *ioLogFile)
@@ -154,7 +154,7 @@ static void ay_log_file_destroy_ext(log_file **ioLogFile, int close)
 		ay_log_file_close(the_log_file);
 
 	if (the_log_file->filename != NULL) {
-		free((char *)the_log_file->filename);
+		g_free((char *)the_log_file->filename);
 		the_log_file->filename = NULL;
 	}
 

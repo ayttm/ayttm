@@ -43,7 +43,7 @@ static void iw_destroy_event(GtkWidget *widget, gpointer data)
 
 	if (iw->info_data != NULL) {
 		iw->cleanup(iw);
-		free(iw->info_data);
+		g_free(iw->info_data);
 		iw->info_data = NULL;
 	}
 	iw->remote_account->infowindow = NULL;
@@ -69,7 +69,7 @@ info_window *eb_info_window_new(eb_local_account *local, struct account *remote)
 	vbox = gtk_vbox_new(FALSE, 0);
 	hbox = gtk_hbox_new(FALSE, 0);
 
-	iw = malloc(sizeof(info_window));
+	iw = g_malloc(sizeof(info_window));
 	iw->info_type = -1;
 	iw->info_data = NULL;
 	iw->remote_account = remote;

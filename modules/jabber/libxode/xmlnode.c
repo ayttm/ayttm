@@ -40,9 +40,7 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
-
-/* Internal routines */
-xmlnode _xmlnode_new(pool p, const char *name, unsigned int type)
+#include <glib.h>(pool p, const char *name, unsigned int type)
 {
 	xmlnode result = NULL;
 	if (type > NTYPE_LAST)
@@ -350,7 +348,7 @@ xmlnode xmlnode_get_tag(xmlnode parent, const char *name)
 		&& strstr(name, "=") == NULL)
 		return _xmlnode_search(parent->firstchild, name, NTYPE_TAG);
 
-	str = strdup(name);
+	str = g_strdup(name);
 	slash = strstr(str, "/");
 	qmark = strstr(str, "?");
 	equals = strstr(str, "=");
@@ -375,7 +373,7 @@ xmlnode xmlnode_get_tag(xmlnode parent, const char *name)
 			break;
 		}
 
-		free(str);
+		g_free(str);
 		return step;
 	}
 
@@ -408,7 +406,7 @@ xmlnode xmlnode_get_tag(xmlnode parent, const char *name)
 			break;
 		}
 
-		free(str);
+		g_free(str);
 		return step;
 	}
 
@@ -425,12 +423,12 @@ xmlnode xmlnode_get_tag(xmlnode parent, const char *name)
 
 		ret = xmlnode_get_tag(step, slash);
 		if (ret != NULL) {
-			free(str);
+			g_free(str);
 			return ret;
 		}
 	}
 
-	free(str);
+	g_free(str);
 	return NULL;
 }
 

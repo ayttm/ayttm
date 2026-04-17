@@ -38,8 +38,8 @@ extern "C" {
 	void edit_account_window_new(eb_account *ea);
 	void add_unknown_account_window_new(eb_account *ea);
 	void edit_group_window_new(grouplist *g);
-	LList *get_all_accounts(int service);
-	LList *get_all_contacts();
+	GList *get_all_accounts(int service);
+	GList *get_all_contacts();
 #ifdef __cplusplus
 }
 #endif

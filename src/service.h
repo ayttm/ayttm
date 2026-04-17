@@ -63,16 +63,16 @@ struct service_callbacks {
 	int (*send_cr_typing) (Conversation *chatroom);
 
 	/* reads local account information from a file */
-	eb_local_account *(*read_local_account_config) (LList *values);
+	eb_local_account *(*read_local_account_config) (GList *values);
 
 	/* gets the configuration necessary to be written to a file */
-	LList *(*write_local_config) (eb_local_account *account);
+	GList *(*write_local_config) (eb_local_account *account);
 
 	/* reads contact information */
-	eb_account *(*read_account_config) (eb_account *ea, LList *config);
+	eb_account *(*read_account_config) (eb_account *ea, GList *config);
 
 	/*Returns the list of all possible states that the user can be in */
-	LList *(*get_states) ();
+	GList *(*get_states) ();
 
 	/*Retruns the index to the current state that the service is int */
 	int (*get_current_state) (eb_local_account *account);
@@ -186,23 +186,23 @@ struct service_callbacks {
 	 * processes any service specific preferences
 	 */
 
-	void (*read_prefs_config) (LList *values);
+	void (*read_prefs_config) (GList *values);
 
 	/*
 	 * get the service specific preferences so they can be written
 	 * to a file
 	 */
 
-	LList *(*write_prefs_config) ();
-	LList *(*add_importers) (LList *);
+	GList *(*write_prefs_config) ();
+	GList *(*add_importers) (GList *);
 
 	/* This lot are used to retrieve various protocol-specific eye-candy.
 	   When these functions are called, their return values are NOT free()ed,
 	   so you can just return a static variable if you want */
 
-	/* This requests a LList of protocol-specific smilies (type protocol_smiley, see
+	/* This requests a GList of protocol-specific smilies (type protocol_smiley, see
 	   smileys.h */
-	LList *(*get_smileys) (void);
+	GList *(*get_smileys) (void);
 
 	/* This returns the color associated with this protocol (in HTML form,
 	   so for example AIM is "#000088" */
@@ -214,7 +214,7 @@ struct service_callbacks {
 	int (*handle_url) (const char *url);
 
 	void (*get_public_chatrooms) (eb_local_account *ela,
-		void (*public_chatroom_callback) (LList *list, void *data),
+		void (*public_chatroom_callback) (GList *list, void *data),
 		void *data);
 };
 
@@ -266,7 +266,7 @@ extern "C" {
 	void add_idle_check();
 	void serv_touch_idle();
 
-	LList *get_service_list();
+	GList *get_service_list();
 
 #ifdef __cplusplus
 }				/* extern "C" */

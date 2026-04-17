@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
 #ifdef CRASH_DIALOG
 		case 'C':
 			crash = 1;
-			crash_param = strdup(optarg);
+			crash_param = g_strdup(optarg);
 			break;
 #endif
 		case 'd':
@@ -473,24 +473,24 @@ int main(int argc, char *argv[])
 
 	/* Make sure this is the first filter that runs */
 	incoming_message_filters =
-		l_list_prepend(incoming_message_filters, ay_chat_convert_incoming);
+		g_list_prepend(incoming_message_filters, ay_chat_convert_incoming);
 	/* And these are the last */
 	incoming_message_filters =
-		l_list_append(incoming_message_filters, ay_smilify_filter);
+		g_list_append(incoming_message_filters, ay_smilify_filter);
 	incoming_message_filters =
-		l_list_append(incoming_message_filters, ay_linkify_filter);
+		g_list_append(incoming_message_filters, ay_linkify_filter);
 
 
 	/* Add your outgoing filters here */
 	outgoing_message_filters_remote =
-		l_list_append(outgoing_message_filters_remote, ay_chat_convert_outgoing);
+		g_list_append(outgoing_message_filters_remote, ay_chat_convert_outgoing);
 	outgoing_message_filters_remote =
-		l_list_append(outgoing_message_filters_remote, ay_convert_eol_filter);
+		g_list_append(outgoing_message_filters_remote, ay_convert_eol_filter);
 
 	outgoing_message_filters_local =
-		l_list_append(outgoing_message_filters_local, ay_smilify_filter);
+		g_list_append(outgoing_message_filters_local, ay_smilify_filter);
 	outgoing_message_filters_local =
-		l_list_append(outgoing_message_filters_local, ay_linkify_filter);
+		g_list_append(outgoing_message_filters_local, ay_linkify_filter);
 
 	accounts_success = load_accounts();
 	load_contacts();

@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 	int ay_spell_check(const char *word);
-	LList *ay_spell_check_suggest(const char *word);
+	GList *ay_spell_check_suggest(const char *word);
 	void ay_spell_check_reload();
 
 #ifdef __cplusplus

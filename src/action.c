@@ -49,7 +49,7 @@ static void action_do_action(char *value, void *data)
 	filename_html = files[0];
 	filename_plain = files[1];
 
-	tvalue = strdup(value);
+	tvalue = g_strdup(value);
 	if (strstr(tvalue, "%s") != NULL) {
 		begin = g_strndup(tvalue, (int)(strstr(tvalue, "%s") - tvalue));
 		end = strstr(tvalue, "%s") + 2;	/* don't free */
@@ -57,8 +57,8 @@ static void action_do_action(char *value, void *data)
 		eb_debug(DBG_CORE, "action command: %s\n", cmd);
 
 		/* replace tvalue */
-		free(tvalue);
-		tvalue = strdup(cmd);
+		g_free(tvalue);
+		tvalue = g_strdup(cmd);
 
 		found = TRUE;
 	}
@@ -72,8 +72,8 @@ static void action_do_action(char *value, void *data)
 		found = TRUE;
 	}
 
-	free(filename_html);
-	free(filename_plain);
+	g_free(filename_html);
+	g_free(filename_plain);
 
 	if (!found) {
 		ay_do_error(_("Action Error"),

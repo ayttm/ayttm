@@ -47,11 +47,11 @@ typedef struct irc_local_account_type {
 	int activity_tag;
 	char *buff;
 	int buff_user;
-	LList *friends;
-	LList *channel_list;
-	LList *current_rooms;
+	GList *friends;
+	GList *channel_list;
+	GList *current_rooms;
 	irc_account *ia;
-	void (*got_public_chatrooms) (LList *list, void *data);
+	void (*got_public_chatrooms) (GList *list, void *data);
 	void *public_chatroom_callback_data;
 	AyConnection *connection;
 } irc_local_account;
@@ -107,10 +107,10 @@ static void ay_irc_login(eb_local_account *account);
 static void ay_irc_logout(eb_local_account *ela);
 static int ay_irc_send_im(eb_local_account *account_from,
 	eb_account *account_to, char *message);
-static eb_local_account *ay_irc_read_local_config(LList *pairs);
-static LList *ay_irc_write_local_config(eb_local_account *account);
-static eb_account *ay_irc_read_config(eb_account *ea, LList *config);
-static LList *ay_irc_get_states();
+static eb_local_account *ay_irc_read_local_config(GList *pairs);
+static GList *ay_irc_write_local_config(eb_local_account *account);
+static eb_account *ay_irc_read_config(eb_account *ea, GList *config);
+static GList *ay_irc_get_states();
 static int ay_irc_get_current_state(eb_local_account *account);
 static void ay_irc_set_current_state(eb_local_account *account, int state);
 static char *ay_irc_check_login(const char *user, const char *pass);
@@ -140,8 +140,8 @@ static Conversation *ay_irc_start_conversation(const char *name,
 	eb_local_account *account, int is_room, int is_public, int send_join);
 static void ay_irc_accept_invite(eb_local_account *account, void *invitation);
 static void ay_irc_decline_invite(eb_local_account *account, void *invitation);
-static void eb_irc_read_prefs_config(LList *values);
-static LList *eb_irc_write_prefs_config();
+static void eb_irc_read_prefs_config(GList *values);
+static GList *eb_irc_write_prefs_config();
 static void irc_connect_cb(AyConnection *con, AyConnectionStatus error,
 	void *data);
 

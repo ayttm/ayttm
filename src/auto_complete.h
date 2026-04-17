@@ -30,12 +30,11 @@
 #define __AUTO_COMPLETE_H__
 
 #include <gtk/gtk.h>
-#include "llist.h"
 
-extern LList *auto_complete_session_words;
+extern GList *auto_complete_session_words;
 
 void chat_auto_complete_validate(GtkWidget *);
-int chat_auto_complete(GtkWidget *, LList *, GdkEventKey *);
+int chat_auto_complete(GtkWidget *, GList *, GdkEventKey *);
 void chat_auto_complete_insert(GtkWidget *, GdkEventKey *);
 
 #endif

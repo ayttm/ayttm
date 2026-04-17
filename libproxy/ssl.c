@@ -44,16 +44,19 @@ static gboolean ssl_inited = FALSE;
 /* Global system initialization */
 void ssl_init(void)
 {
-	static GStaticMutex ssl_init_lock = G_STATIC_MUTEX_INIT;
+	/* static GMutex is zero-initialized; GLib 2.32+ guarantees this is valid.
+	 * GStaticMutex and g_mutex_new() were removed in GLib 2.32. */
+	static GMutex ssl_init_lock;
 
-	g_static_mutex_lock(&ssl_init_lock);
+	g_mutex_lock(&ssl_init_lock);
 
 	if (ssl_inited)
-		return;
+		goto done;
 
 	ssl_inited = TRUE;
 
-	g_static_mutex_unlock(&ssl_init_lock);
+done:
+	g_mutex_unlock(&ssl_init_lock);
 }
 
 SSL *ssl_get_socket(int sock, const char *host, int port, void *data)

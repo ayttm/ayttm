@@ -86,11 +86,11 @@ static int eb_nomodule_send_im(eb_local_account *account_from,
 	return 1;
 }
 
-static eb_local_account *eb_nomodule_read_local_config(LList *pairs)
+static eb_local_account *eb_nomodule_read_local_config(GList *pairs)
 {
-	eb_local_account *ela = calloc(1, sizeof(eb_local_account));
+	eb_local_account *ela = g_new0(eb_local_account, 1);
 	struct eb_nomodule_local_account_data *ala =
-		calloc(1, sizeof(struct eb_nomodule_local_account_data));
+		g_new0(struct eb_nomodule_local_account_data, 1);
 	char *ptr = NULL;
 
 	eb_debug(DBG_CORE, "eb_nomodule_read_local_config: entering\n");
@@ -99,7 +99,7 @@ static eb_local_account *eb_nomodule_read_local_config(LList *pairs)
 
 	if (ptr) {
 		strncpy(ela->handle, ptr, sizeof(ela->handle));
-		free(ptr);
+		g_free(ptr);
 	}
 
 	if (!ela->handle[0]) {
@@ -116,7 +116,7 @@ static eb_local_account *eb_nomodule_read_local_config(LList *pairs)
 			ela->handle);
 	} else {
 		strncpy(ala->password, ptr, 255);
-		free(ptr);
+		g_free(ptr);
 	}
 	ela->service_id = SERVICE_INFO.protocol_id;
 	ela->protocol_local_account_data = ala;
@@ -126,9 +126,9 @@ static eb_local_account *eb_nomodule_read_local_config(LList *pairs)
 	return ela;
 }
 
-static LList *eb_nomodule_write_local_config(eb_local_account *account)
+static GList *eb_nomodule_write_local_config(eb_local_account *account)
 {
-	LList *list = NULL;
+	GList *list = NULL;
 	struct eb_nomodule_local_account_data *alad =
 		account->protocol_local_account_data;
 
@@ -138,10 +138,10 @@ static LList *eb_nomodule_write_local_config(eb_local_account *account)
 	return list;
 }
 
-static eb_account *eb_nomodule_read_config(eb_account *ea, LList *config)
+static eb_account *eb_nomodule_read_config(eb_account *ea, GList *config)
 {
 	struct eb_nomodule_account_data *aad =
-		calloc(1, sizeof(struct eb_nomodule_account_data));
+		g_new0(struct eb_nomodule_account_data, 1);
 
 	aad->status = 0;
 
@@ -150,7 +150,7 @@ static eb_account *eb_nomodule_read_config(eb_account *ea, LList *config)
 	return ea;
 }
 
-static LList *eb_nomodule_get_states()
+static GList *eb_nomodule_get_states()
 {
 	return NULL;
 }
@@ -229,12 +229,12 @@ static input_list *eb_nomodule_get_prefs()
 	return NULL;
 }
 
-static void eb_nomodule_read_prefs_config(LList *values)
+static void eb_nomodule_read_prefs_config(GList *values)
 {
 	return;
 }
 
-static LList *eb_nomodule_write_prefs_config()
+static GList *eb_nomodule_write_prefs_config()
 {
 	return NULL;
 }
@@ -244,14 +244,14 @@ static void eb_nomodule_free_account_data(eb_account *account)
 	if (account == NULL)
 		return;
 
-	free(account->protocol_account_data);
+	g_free(account->protocol_account_data);
 }
 
 struct service_callbacks *eb_nomodule_query_callbacks()
 {
 	struct service_callbacks *sc;
 
-	sc = calloc(1, sizeof(struct service_callbacks));
+	sc = g_new0(struct service_callbacks, 1);
 	sc->query_connected = eb_nomodule_query_connected;
 	sc->login = eb_nomodule_login;
 	sc->logout = eb_nomodule_logout;

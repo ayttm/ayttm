@@ -61,7 +61,7 @@ static GtkTextBuffer *buffer = NULL;
 static GtkWidget *window = NULL;
 static GtkWidget *title = NULL;
 static GtkWidget *save = NULL;
-static LList *datalist = NULL;
+static GList *datalist = NULL;
 static GtkWidget *data_clist = NULL;
 static GtkListStore *data_clist_model = NULL;
 
@@ -107,7 +107,7 @@ static void load_data(char *file)
 		if (!g_strncasecmp(buff, bentity, strlen(bentity))) {
 			my_data = g_new0(data, 1);
 		} else if (!g_strncasecmp(buff, eentity, strlen(eentity))) {
-			datalist = l_list_append(datalist, my_data);
+			datalist = g_list_append(datalist, my_data);
 		} else if (!g_strncasecmp(buff, "<TITLE>", strlen("<TITLE>"))) {
 			reading_title = TRUE;
 		} else if (!g_strncasecmp(buff, "</TITLE>", strlen("</TITLE>"))) {
@@ -144,7 +144,7 @@ static void delete_data_cb(GtkWidget *menuitem, gpointer d)
 	gtk_tree_model_get(GTK_TREE_MODEL(data_clist_model), &selected,
 		CLIST_DATA, &my_data, -1);
 
-	datalist = l_list_remove(datalist, my_data);
+	datalist = g_list_remove(datalist, my_data);
 	write_data(myfile);
 
 	gtk_list_store_remove(data_clist_model, &selected);
@@ -285,7 +285,7 @@ static void clicked_data_cb(GtkWidget *widget, GdkEventButton *event,
 static void build_data_clist()
 {
 	char rdata[8];
-	LList *data_list = datalist;
+	GList *data_list = datalist;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *renderer;
 	data *my_data = NULL;
@@ -361,7 +361,7 @@ static void build_data_clist()
 
 static void write_data()
 {
-	LList *data_list = datalist;
+	GList *data_list = datalist;
 	FILE *fp;
 	char buff2[2048];
 	data *my_data;
@@ -395,9 +395,9 @@ static void write_data()
 	fclose(fp);
 }
 
-static LList *replace_data(LList *list, data *msg)
+static GList *replace_data(GList *list, data *msg)
 {
-	LList *w = list;
+	GList *w = list;
 	while (w) {
 		data *omsg = (data *)w->data;
 		if (!strcmp(omsg->title, msg->title)) {
@@ -407,12 +407,12 @@ static LList *replace_data(LList *list, data *msg)
 		w = w->next;
 	}
 	/* not found */
-	return l_list_append(list, msg);
+	return g_list_append(list, msg);
 }
 
 static void check_title(GtkWidget *widget, gpointer d)
 {
-	LList *w = datalist;
+	GList *w = datalist;
 	const char *txt = gtk_entry_get_text(GTK_ENTRY(title));
 	int replace = FALSE;
 	GList *ch = gtk_container_get_children(GTK_CONTAINER(save));
@@ -456,7 +456,7 @@ static void save_data(void)
 
 	gchar *buff = NULL;
 
-	buff = strdup(gtk_entry_get_text(GTK_ENTRY(title)));
+	buff = g_strdup(gtk_entry_get_text(GTK_ENTRY(title)));
 
 	if (!buff || strlen(buff) == 0) {
 		gtk_text_buffer_get_bounds(buffer, &start, &end);
@@ -474,17 +474,17 @@ static void save_data(void)
 	}
 	g_string_append(a_title, buff);
 
-	free(buff);
+	g_free(buff);
 
 	gtk_text_buffer_get_bounds(buffer, &start, &end);
 	buff = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
 
 	if (!buff || strlen(buff) == 0)	/* in this case title can't be empty */
-		buff = strdup(a_title->str);
+		buff = g_strdup(a_title->str);
 
 	g_string_append(a_message, buff);
 
-	free(buff);
+	g_free(buff);
 
 	if (dosave == 1) {
 		my_data = g_new0(data, 1);

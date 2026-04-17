@@ -45,8 +45,8 @@ typedef struct _conversation {
 	eb_local_account *local_user;
 
 	time_t next_typing_send;
-	LList *history;
-	LList *hist_pos;
+	GList *history;
+	GList *hist_pos;
 	int this_msg_in_history;
 	log_file *logfile;
 	char *name;
@@ -61,7 +61,7 @@ typedef struct _conversation {
 	   FALSE when user sends regular message */
 	time_t away_msg_sent;
 	time_t away_warn_displayed;
-	LList *fellows;
+	GList *fellows;
 	int num_fellows;
 
 	t_log_window_id lw;

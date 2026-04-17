@@ -39,7 +39,6 @@
 #include "prefs.h"
 #include "util.h"
 #include "messages.h"
-#include "llist.h"
 #include "platform_defs.h"
 #include "libproxy/networking.h"
 #include "conversation.h"
@@ -96,7 +95,7 @@ unsigned int module_version()
 
 static int trans_init()
 {
-	input_list *il = calloc(1, sizeof(input_list));
+	input_list *il = g_new0(input_list, 1);
 	plugin_info.prefs = il;
 
 	languages[0] = "en (English)";
@@ -116,16 +115,16 @@ static int trans_init()
 	il->label = _("Enable automatic translation");
 	il->type = EB_INPUT_CHECKBOX;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.listbox.value = &myLanguage;
 	il->name = "myLanguage";
 	il->label = _("My language code:");
 	{
-		LList *l = NULL;
+		GList *l = NULL;
 		int i;
 		for (i = 0; languages[i]; i++)
-			l = l_list_append(l, languages[i]);
+			l = g_list_append(l, languages[i]);
 
 		il->widget.listbox.list = l;
 	}
@@ -134,11 +133,11 @@ static int trans_init()
 	eb_debug(DBG_MOD, "Auto-trans initialised\n");
 
 	outgoing_message_filters_local =
-		l_list_prepend(outgoing_message_filters_local, &translate_out);
+		g_list_prepend(outgoing_message_filters_local, &translate_out);
 	outgoing_message_filters_remote =
-		l_list_prepend(outgoing_message_filters_remote, &translate_out);
+		g_list_prepend(outgoing_message_filters_remote, &translate_out);
 	incoming_message_filters =
-		l_list_append(incoming_message_filters, &translate_out);
+		g_list_append(incoming_message_filters, &translate_out);
 
 	/* the following is adapted from notes.c */
 
@@ -168,17 +167,17 @@ static int trans_finish()
 
 	eb_debug(DBG_MOD, "Auto-trans shutting down\n");
 	outgoing_message_filters_local =
-		l_list_remove(outgoing_message_filters_local, &translate_out);
+		g_list_remove(outgoing_message_filters_local, &translate_out);
 	outgoing_message_filters_remote =
-		l_list_remove(outgoing_message_filters_remote, &translate_out);
+		g_list_remove(outgoing_message_filters_remote, &translate_out);
 	incoming_message_filters =
-		l_list_remove(incoming_message_filters, &translate_out);
+		g_list_remove(incoming_message_filters, &translate_out);
 
 	while (plugin_info.prefs) {
 		input_list *il = plugin_info.prefs->next;
 		if (il && il->type == EB_INPUT_LIST)
-			l_list_free(il->widget.listbox.list);
-		free(plugin_info.prefs);
+			g_list_free(il->widget.listbox.list);
+		g_free(plugin_info.prefs);
 		plugin_info.prefs = il;
 	}
 
@@ -245,8 +244,8 @@ static char *trans_urlencode(const char *instr)
 	char *str = NULL;
 	int len = strlen(instr);
 
-	if (!(str = malloc(sizeof(char) * (3 * len + 1))))
-		return strdup("");
+	if (!(str = g_malloc(sizeof(char) * (3 * len + 1))))
+		return g_strdup("");
 
 	while (instr[ipos]) {
 		while (isurlchar(instr[ipos]))
@@ -379,7 +378,7 @@ static char *doTranslate(const char *ostring, const char *from, const char *to)
 	string = trans_urlencode(ostring);
 	snprintf(buf, 2048, "/translate_t?hl=%s&js=n&text=%s&sl=%s&tl=%s",
 		from, string, from, to);
-	free(string);
+	g_free(string);
 
 	fd = do_http_post("translate.google.com", buf, d);
 

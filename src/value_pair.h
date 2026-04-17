@@ -28,7 +28,6 @@
 #include <stdio.h>
 
 #include "prefs.h"
-#include "llist.h"
 
 typedef struct _value_pair {
 	char key[MAX_PREF_NAME_LEN];
@@ -39,12 +38,12 @@ typedef struct _value_pair {
 extern "C" {
 #endif
 
-	char *value_pair_get_value(LList *pairs, const char *key);
-	void value_pair_print_values(LList *pairs, FILE *file, int indent);
-	void value_pair_free(LList *pairs);
-	LList *value_pair_update(LList *pairs, LList *new_list);
-	LList *value_pair_add(LList *list, const char *key, const char *value);
-	LList *value_pair_remove(LList *list, const char *key);
+	char *value_pair_get_value(GList *pairs, const char *key);
+	void value_pair_print_values(GList *pairs, FILE *file, int indent);
+	void value_pair_free(GList *pairs);
+	GList *value_pair_update(GList *pairs, GList *new_list);
+	GList *value_pair_add(GList *list, const char *key, const char *value);
+	GList *value_pair_remove(GList *list, const char *key);
 
 #ifdef __cplusplus
 }				/* extern "C" */

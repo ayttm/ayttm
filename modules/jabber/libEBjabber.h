@@ -79,7 +79,7 @@ typedef struct _eb_jabber_local_account_data {
 	char server_port[MAX_PREF_LEN];
 	char ssl_server_port[MAX_PREF_LEN];
 	char connect_server[MAX_PREF_LEN];
-	LList *jabber_contacts;
+	GList *jabber_contacts;
 } eb_jabber_local_account_data;
 
 struct jabber_buddy {
