@@ -253,11 +253,9 @@ int load_module(const char *path, const char *name)
 	assert(path != NULL);
 	assert(name != NULL);
 
-	full_path = calloc(strlen(path)+strlen(name)+2, sizeof(char));
+	full_path = g_strdup_printf("%s/%s", path, name);
 
 	assert(full_path != NULL);
-
-	sprintf(full_path, "%s/%s", path, name);
 
 	return (load_module_full_path(full_path));
 }

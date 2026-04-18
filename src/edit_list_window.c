@@ -339,7 +339,7 @@ static void build_data_clist()
 			CLIST_TITLE, aw[0],
 			CLIST_DATA_TYPE, aw[1], CLIST_DATA, my_data, -1);
 
-		sprintf(rdata, "rowdata%d", i);
+		g_snprintf(rdata, sizeof(rdata), "rowdata%d", i);
 
 		i++;
 		data_list = data_list->next;

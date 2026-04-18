@@ -74,7 +74,7 @@ static void s_add_pref(const char *key, void *data)
 {
 	ptr_list *pref_data = calloc(1, sizeof(ptr_list));
 
-	strcpy(pref_data->key, key);
+	g_strlcpy(pref_data->key, key, sizeof(pref_data->key));
 	pref_data->value = (void *)data;
 
 	s_global_prefs = l_list_append(s_global_prefs, pref_data);

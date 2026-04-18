@@ -136,7 +136,7 @@ void eb_update_from_value_pair(input_list *il, LList *vp)
 
 				if (value != NULL)
 					strncpy(tmp, value, MAX_PREF_LEN);
-				strcpy(il->widget.entry.value, tmp);
+				g_strlcpy(il->widget.entry.value, tmp, MAX_PREF_LEN);
 			}
 			break;
 

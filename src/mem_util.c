@@ -48,11 +48,11 @@ char *ay_string_append(char *string, const char *append)
 
 	if (new_string == NULL) {
 		new_string = ay_new(char, size);
-		strcpy(new_string, string);
+		g_strlcpy(new_string, string, size);
 		ay_free(string);
 	}
 
-	strcat(new_string, append);	/* this one is safe */
+	g_strlcat(new_string, append, size);	/* safe: buffer sized for both */
 
 	return new_string;
 }

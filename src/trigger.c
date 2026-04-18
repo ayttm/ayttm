@@ -70,8 +70,7 @@ void do_trigger_action(struct contact *con, int trigger_type)
 	gchar *substr;
 	gchar *basestr;
 
-	strcpy(param_string, "");
-	substr = NULL;
+	param_string[0] = '\0';
 
 	if (con->trigger.action == NO_ACTION)
 		return;
@@ -103,7 +102,7 @@ void do_trigger_action(struct contact *con, int trigger_type)
 			eb_debug(DBG_CORE,
 				"Result string may be too long, no substitution done\n");
 			basestr = con->trigger.param;
-			strcpy(param_string, "");
+			param_string[0] = '\0';
 			break;
 		}
 	}

@@ -151,8 +151,7 @@ int chat_auto_complete(GtkWidget *entry, LList *words, GdkEventKey *event)
 		if (last_word != word)
 			last_word++;
 
-		comp_word = malloc(strlen(last_word) + 2);
-		sprintf(comp_word, "%s%c", last_word, event->keyval);
+		comp_word = g_strdup_printf("%s%c", last_word, event->keyval);
 		/* eb_debug(DBG_CORE, "word caught: %s\n",comp_word); */
 		nick = complete_word(words, comp_word, &choice);
 

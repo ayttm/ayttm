@@ -1775,9 +1775,7 @@ static void _init_smileys (PrefSet *me)
 	GtkWidget *button;
 	GtkWidget *tree;
 	GtkWidget *label;
-	char label_text[24];
-
-	sprintf(label_text, "<b>%s</b>", _("Smiley Plugins"));
+	gchar *label_text = g_strdup_printf("<b>%s</b>", _("Smiley Plugins"));
 
 	top_container = _prep_top_container(me);
 
@@ -1786,6 +1784,7 @@ static void _init_smileys (PrefSet *me)
 
 	label = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL(label), label_text);
+	g_free(label_text);
 	gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
 	gtk_misc_set_padding(GTK_MISC(label), 0, 20);
 	gtk_box_pack_start(GTK_BOX(top_container), label, FALSE, FALSE, 0);

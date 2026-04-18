@@ -303,11 +303,11 @@ int main(int argc, char *argv[])
 			/*Make sure we have directory delimiter */
 #if defined( _WIN32 )
 			if (config_dir[strlen(config_dir) - 1] != '\\')
-				strcat(config_dir, "\\");
+				g_strlcat(config_dir, "\\", sizeof(config_dir));
 #else
 			if (config_dir[strlen(config_dir) - 1] !=
 				G_DIR_SEPARATOR)
-				strcat(config_dir, (char *)G_DIR_SEPARATOR);
+				g_strlcat(config_dir, (char *)G_DIR_SEPARATOR, sizeof(config_dir));
 #endif
 			if (stat(config_dir, &stat_buf) == -1) {
 				perror(config_dir);

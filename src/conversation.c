@@ -157,7 +157,7 @@ void ay_conversation_buddy_chnick(Conversation *conv, const char *handle,
 
 		if (!strcmp(fellow->handle, handle)) {
 			oldalias = strdup(fellow->alias);
-			strcpy(fellow->alias, newalias);
+			g_strlcpy(fellow->alias, newalias, sizeof(fellow->alias));
 			ay_chat_window_fellows_rename(conv->window, fellow);
 			break;
 		}
@@ -686,9 +686,9 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 				}
 				if (!strncmp(token, conv->contact->nick,
 						strlen(conv->contact->nick)))
-					strcpy(color, "#ff0000");
+					g_strlcpy(color, "#ff0000", sizeof(color));
 				else
-					strcpy(color, "#0000ff");
+					g_strlcpy(color, "#0000ff", sizeof(color));
 
 				strncpy(name, buff, buff3 - buff2);
 				name[buff3 - buff2] = '\0';

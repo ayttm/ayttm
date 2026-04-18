@@ -690,10 +690,9 @@ void parse_html(GtkTextView *text_view, GtkTextMark html_start, int ignore)
 				&tag_end_iter);
 
 			/* This is a start tag. So put this into the list */
-			cur = (tag *)malloc(sizeof(tag));
-			bzero(cur->id, 8);
+			cur = g_new0(tag, 1);
 
-			sprintf(cur->id, "%d%d", messageid, tagid++);
+			g_snprintf(cur->id, sizeof(cur->id), "%d%d", messageid, tagid++);
 			cur->name = strdup(tag_string);
 			cur->start = *tag_start_mark;
 
@@ -711,7 +710,7 @@ void parse_html(GtkTextView *text_view, GtkTextMark html_start, int ignore)
 				tag_list = g_list_append(tag_list, cur);
 			} else {
 				apply_tag(text_view, *cur, ignore);
-				free(cur);
+				g_free(cur);
 			}
 
 		}
