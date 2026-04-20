@@ -297,9 +297,6 @@ fi
 LIBS=$ac_check_lib_save_LIBS 
 CFLAGS=$ac_check_lib_save_CFLAGS
 
-# Check for libyahoo2
-AC_CHECK_LIB(yahoo2, yahoo_init,, [enable_yahoo="no"];AC_MSG_WARN([libyahoo2 is not installed. Yahoo protocol module will not be built]))
-
 GTK_CFLAGS="$GTK_CFLAGS" # -DGTK_DISABLE_DEPRECATED"
 EB_CFLAGS="$EB_CFLAGS $GLIB_CFLAGS $GTK_CFLAGS"
 EB_LIBS="$EB_LIBS $GLIB_LIBS $GTK_LIBS"
@@ -360,60 +357,19 @@ EB_LIBS="$EB_LIBS $X_LIBS"
 # Begin Optional Modules
 ###########################################################################
 
-AC_ARG_ENABLE(oscar, AC_HELP_STRING([--disable-oscar],
-		[exclude oscar service]))
-AC_ARG_ENABLE(workwizu, AC_HELP_STRING([--enable-workwizu],
-		[include workwizu service]))
-AC_ARG_ENABLE(broken_icq, AC_HELP_STRING([--enable-broken-icq],
-		[include broken icq service instead of working one]))
 AC_ARG_ENABLE(smtp, AC_HELP_STRING([--enable-smtp],
 		[include smtp service]))
-AC_ARG_ENABLE(lj, AC_HELP_STRING([--enable-lj],
-		[include livejournal service]))
 AC_ARG_ENABLE(aycryption, AC_HELP_STRING([--disable-aycryption],
  		[exclude encryption utility]))
-AC_ARG_ENABLE(aim_toc, AC_HELP_STRING([--enable-aim-toc],
-		[include aim-toc service]))
-AC_ARG_ENABLE(icq_toc, AC_HELP_STRING([--enable-icq-toc],
-		[include icq-toc service]))
-AC_ARG_ENABLE(icq, AC_HELP_STRING([--disable-icq],
-		[exclude icq service]))
 AC_ARG_ENABLE(irc, AC_HELP_STRING([--disable-irc],
 		[exclude irc service]))
 AC_ARG_ENABLE(jabber, AC_HELP_STRING([--disable-jabber],
 		[exclude jabber service]))
-AC_ARG_ENABLE(msn, AC_HELP_STRING([--disable-msn],
-		[exclude msn service]))
-AC_ARG_ENABLE(yahoo, AC_HELP_STRING([--disable-yahoo],
-		[exclude yahoo service]))
 
 OPTIONAL_PLUG_DIR=""
-DEBUG_LIBMSN=""
 
-if test "$enable_oscar" != no; then
- 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR aim-oscar"
-fi
-if test "$enable_msn" != no; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR msn2"
-fi
-if test "$enable_workwizu" = yes; then
-	have_gmp=no;
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR workwizu"
-	GMP_LDFLAGS="-lgmp"
-	LDFLAGS="$LDFLAGS $GMP_LDFLAGS"
-	AC_CHECK_HEADER(gmp.h, [
-	AC_CHECK_LIB(gmp, __gmpz_init,have_gmp=yes;[EB_LIBS="$EB_LIBS $GMP_LDFLAGS"],, -lgmp)])
-	if test "$have_gmp" = no; then
-	 echo "You need gmp for workwizu"
-	 echo "http://www.swox.com/gmp/"
-	 enable_workwizu=no;
-	fi;
-fi
 if test "$enable_smileys" != no; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR smileys"
-fi
-if test "$enable_yahoo" != no; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR yahoo2"
 fi
 if test "$enable_irc" != no; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR irc"
@@ -421,20 +377,8 @@ fi
 if test "$enable_jabber" != no; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR jabber"
 fi
-if test "$enable_broken_icq" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR icq"
-fi
 if test "$enable_smtp" = yes; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR smtp"
-fi
-if test "$enable_lj" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR livejournal"
-fi
-if test "$enable_aim_toc" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR aim-toc"
-fi
-if test "$enable_icq_toc" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR icq-toc"
 fi
 if test "$enable_aycryption" != no; then
 	AM_PATH_GPGME(1.0.0, [OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR aycryption"], 
@@ -555,26 +499,18 @@ AC_CONFIG_FILES([Makefile ayttm.spec
                  po/Makefile.in
                  m4/Makefile 
 		 modules/Makefile
-                 modules/aim-oscar/Makefile
-		 modules/aim-oscar/libfaim/Makefile
-		 modules/aim-oscar/libfaim/include/Makefile
-		 modules/aim-oscar/libfaim/src/Makefile
                  modules/importers/Makefile
                  modules/irc/Makefile
 		 modules/irc/libirc/Makefile
 		 modules/smtp/Makefile
-                 modules/livejournal/Makefile
                  modules/jabber/Makefile
                  modules/jabber/libjabber/Makefile
                  modules/jabber/libjabber/include/Makefile
                  modules/jabber/libjabber/include/jabber/Makefile
                  modules/jabber/libxode/Makefile
                  modules/jabber/libxode/include/Makefile
-                 modules/msn2/Makefile
-                 modules/msn2/libmsn2/Makefile
                  modules/aycryption/Makefile
                  modules/utility/Makefile
-                 modules/yahoo2/Makefile
 		 modules/smileys/Makefile
 		 modules/smileys/console_smileys/Makefile
 		 modules/smileys/giles_smiles/Makefile

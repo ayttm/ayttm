@@ -1,7 +1,0 @@
-Makefile
-Makefile.in
-.deps
-.libs
-workwizu.lo
-workwizu.la
-workwizu.o
