@@ -62,6 +62,8 @@
 /* Prototypes */
 static char *encode_proxy_auth_str(AyProxyData *proxy);
 
+AyProxyData *default_proxy = NULL;
+
 #define debug_print printf
 
 /* 

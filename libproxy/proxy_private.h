@@ -30,7 +30,7 @@
 #ifndef __PROXY_PRIVATE_H__
 #define __PROXY_PRIVATE_H__
 
-AyProxyData *default_proxy;
+extern AyProxyData *default_proxy;
 
 #ifdef __cplusplus
 extern "C" {

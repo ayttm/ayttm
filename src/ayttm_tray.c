@@ -39,6 +39,7 @@ GtkWidget *sign_off_menu_item = NULL;
 GtkWidget *set_away_menu_item = NULL;
 GtkWidget *prefs_menu_item = NULL;
 GtkWidget *quit_menu_item = NULL;
+GtkStatusIcon *ayttm_status_icon = NULL;
 
 static void build_prefs_callback(GtkWidget *widget, gpointer stats)
 {
