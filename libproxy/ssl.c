@@ -25,12 +25,12 @@
 #include "config.h"
 
 #ifdef HAVE_OPENSSL
+#include <glib.h>
 #include "ssl.h"
 #include "ssl_certificate.h"
 
 #include "debug.h"
 #include <string.h>
-#include <glib.h>
 #include "globals.h"
 #include "networking.h"
 

@@ -30,6 +30,7 @@
 #ifndef __GLOBALS_H__
 #define __GLOBALS_H__
 
+#include <glib.h>
 #include "platform_defs.h"
 #include "llist.h"
 

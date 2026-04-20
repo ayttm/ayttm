@@ -28,7 +28,7 @@
 
 #ifdef HAVE_LIBENCHANT
 
-#include <enchant++.h>
+#include <enchant.h>
 #include <stdlib.h>
 #include <string.h>
 #include "prefs.h"
@@ -36,7 +36,8 @@
 #include "debug.h"
 
 class AySpellChecker {
-	enchant::Dict *spell_checker;
+	EnchantBroker *broker;
+	EnchantDict *dict;
 	const char *language;
 
 	public:
@@ -75,50 +76,60 @@ static const char * get_language()
 	return lang;
 }
 
-AySpellChecker::AySpellChecker() : spell_checker(NULL)
+AySpellChecker::AySpellChecker() : broker(NULL), dict(NULL)
 {
+	broker = enchant_broker_init();
 	reload();
 }
 
 void AySpellChecker::reload()
 {
 	language = get_language();
-	delete spell_checker;
 
-	try {
-		spell_checker = enchant::Broker::instance()->request_dict(language);
-	} catch (enchant::Exception e) {
-		eb_debug(DBG_CORE, "Error while loading enchant dictionary: %s\n", e.what());
+	if (dict && broker) {
+		enchant_broker_free_dict(broker, dict);
+		dict = NULL;
+	}
+
+	if (broker) {
+		dict = enchant_broker_request_dict(broker, language);
+		if (!dict)
+			eb_debug(DBG_CORE, "Error while loading enchant dictionary for language: %s\n", language);
 	}
 }
 
 int AySpellChecker::check(const char * word)
 {
-	if(!word || !spell_checker)
+	if(!word || !dict)
 		return 1;
-	else
-		return spell_checker->check(word);
+	return enchant_dict_check(dict, word, -1) == 0 ? 0 : 1;
 }
 
 LList * AySpellChecker::suggest(const char * word)
 {
-	if(!word || !spell_checker)
+	if(!word || !dict)
 		return NULL;
 
-	std::vector<std::string> suggestions;
-	spell_checker->suggest(word, suggestions);
+	size_t n_suggestions = 0;
+	char **suggestions = enchant_dict_suggest(dict, word, -1, &n_suggestions);
 
-	LList * words = NULL;
-	std::vector<std::string>::iterator aEnd = suggestions.end();
-	for (std::vector<std::string>::iterator aI = suggestions.begin(); aI != aEnd; ++aI)
-		words = l_list_append(words, strdup(aI->c_str()));
+	GList *words = NULL;
+	for (size_t i = 0; i < n_suggestions; i++)
+		words = g_list_prepend(words, g_strdup(suggestions[i]));
+	words = g_list_reverse(words);
+
+	if (suggestions)
+		enchant_dict_free_string_list(dict, suggestions);
 
 	return words;
 }
 
 AySpellChecker::~AySpellChecker()
 {
-	delete spell_checker;
+	if (dict && broker)
+		enchant_broker_free_dict(broker, dict);
+	if (broker)
+		enchant_broker_free(broker);
 }
 
 

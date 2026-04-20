@@ -113,7 +113,8 @@ AC_CHECK_HEADERS([alloca.h argz.h arpa/inet.h malloc.h netdb.h netinet/in.h path
 AC_CHECK_HEADERS([sys/utsname.h])
 
 #Checking for enchant
-PKG_CHECK_MODULES([ENCHANT], [enchant], [AC_DEFINE(HAVE_LIBENCHANT, , Define if we use enchant)], [])
+PKG_CHECK_MODULES([ENCHANT], [enchant-2], [AC_DEFINE(HAVE_LIBENCHANT, , Define if we use enchant)],
+  [AC_MSG_WARN([enchant-2 not found -- spell checking will be disabled])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_PID_T
@@ -283,6 +284,14 @@ AC_TRY_LINK([#include <openssl/opensslv.h>],
     [have_openssl=yes], [have_openssl=no])
 
 if test "$have_openssl" = yes; then
+	AC_MSG_CHECKING([for OpenSSL >= 1.1.0])
+	AC_TRY_COMPILE([#include <openssl/opensslv.h>
+		#if OPENSSL_VERSION_NUMBER < 0x10100000L
+		#  error "too old"
+		#endif], [],
+		[AC_MSG_RESULT([yes])],
+		[AC_MSG_RESULT([no])
+		 AC_MSG_ERROR([OpenSSL >= 1.1.0 is required (1.0.x is end-of-life)])])
 	EB_LIBS="$EB_LIBS $SSL_LIBDIR -lssl -lcrypto"
 	EB_CFLAGS="$EB_CFLAGS $SSL_INCLUDES"
 	AC_DEFINE(HAVE_OPENSSL, 1, [Define if you have openssl])

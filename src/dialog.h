@@ -25,7 +25,8 @@
 #ifndef __DIALOG__
 #define __DIALOG__
 
-#include "llist.h"
+#include <glib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

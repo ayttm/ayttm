@@ -22,7 +22,7 @@
 #ifndef __SPELLCHECK_H__
 #define __SPELLCHECK_H__
 
-#include "llist.h"
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -25,8 +25,7 @@
 /*
  * contactlist.c
  */
-
-#include "llist.h"
+#include <glib.h>
 
 LList *groups;
 LList *temp_groups;

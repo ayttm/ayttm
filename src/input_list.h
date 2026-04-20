@@ -25,7 +25,7 @@
 #ifndef __INPUT_LIST_H__
 #define __INPUT_LIST_H__
 
-#include "llist.h"
+#include <glib.h>
 
 enum {
 	EB_INPUT_CHECKBOX,

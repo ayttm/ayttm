@@ -5,7 +5,7 @@
 #ifndef __externs_h__
 #define __externs_h__
 
-#include "llist.h"
+#include <glib.h>
 
 #if defined(__MINGW32__) && defined(__IN_PLUGIN__)
 __declspec(dllimport)

@@ -39,10 +39,11 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y \
-            autoconf automake libtool \
+            autoconf automake libtool libltdl-dev \
             libglib2.0-dev libgtk2.0-dev \
             libssl-dev \
             libxml2-dev \
+            libenchant-2-dev \
             flex bison \
             gettext
 
@@ -76,9 +77,10 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y \
-            autoconf automake libtool \
+            autoconf automake libtool libltdl-dev \
             libglib2.0-dev libgtk2.0-dev \
             libssl-dev libxml2-dev \
+            libenchant-2-dev \
             flex bison gettext
 
       - name: Bootstrap autotools
