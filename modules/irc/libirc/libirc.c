@@ -21,6 +21,7 @@
 
 #include "libirc.h"
 #include "ctcp.h"
+#include <glib.h>
 
 static char irc_modes[] = {
 	'a',
@@ -369,6 +370,7 @@ void irc_param_list_free(irc_param_list *param_list)
 	while (param_list) {
 		to_be_freed = param_list;
 		param_list = param_list->next;
+		g_free(to_be_freed->param);
 		g_free(to_be_freed);
 		to_be_freed = NULL;
 	}

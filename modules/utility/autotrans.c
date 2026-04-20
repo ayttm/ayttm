@@ -340,7 +340,7 @@ static void http_connected(AyConnection *fd, int error, void *data)
 static AyConnection *do_http_post(const char *host, const char *path,
 	struct http_data *d)
 {
-	char buff[1024];
+	char buff[4096];
 	AyConnection *fd = ay_connection_new(host, 80,
 		AY_CONNECTION_TYPE_PLAIN);
 

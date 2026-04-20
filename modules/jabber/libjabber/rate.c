@@ -40,7 +40,9 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
-#include <glib.h>(int maxt, int maxp)
+#include <glib.h>
+
+jlimit jlimit_new(int maxt, int maxp)
 {
 	pool p;
 	jlimit r;

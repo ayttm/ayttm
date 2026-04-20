@@ -40,7 +40,9 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
-#include <glib.h>(void *userdata, const char *name, const char **atts)
+#include <glib.h>
+
+void expat_startElement(void *userdata, const char *name, const char **atts)
 {
 	/* get the xmlnode pointed to by the userdata */
 	xmlnode *x = userdata;

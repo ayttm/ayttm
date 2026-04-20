@@ -21,6 +21,7 @@
  */
 
 #include <string.h>
+#include <glib.h>
 #include "libirc.h"
 #include "irc_replies.h"
 

@@ -687,7 +687,7 @@ static eb_account *eb_jabber_new_account(eb_local_account *ela,
 	eb_jabber_account_data *jad = g_new0(eb_jabber_account_data, 1);
 	ea->ela = ela;
 	ea->protocol_account_data = jad;
-	strncpy(ea->handle, account, 255);
+	g_strlcpy(ea->handle, account, sizeof(ea->handle));
 	ea->service_id = SERVICE_INFO.protocol_id;
 	jad->status = JABBER_OFFLINE;
 
@@ -1050,7 +1050,6 @@ void JABBERDelBuddy(JABBER_Conn *JConn, void *data)
 	eb_account *ea;
 	char *jid = data;
 	eb_local_account *ela = NULL;
-	eb_jabber_local_account_data *jlad = NULL;
 	if (!JConn) {
 		eb_debug(DBG_JBR, "No JConn!\n");
 		return;
@@ -1060,7 +1059,6 @@ void JABBERDelBuddy(JABBER_Conn *JConn, void *data)
 		eb_debug(DBG_JBR, "No ela!\n");
 		return;
 	}
-	jlad = ela->protocol_local_account_data;
 
 	if (!data) {
 		eb_debug(DBG_JBR, "called null argument\n");
@@ -1268,7 +1266,6 @@ void JABBERLogout(void *data)
 {
 	JABBER_Conn *JConn = (JABBER_Conn *)data;
 	eb_local_account *ela = NULL;
-	eb_jabber_local_account_data *jlad = NULL;
 	if (!JConn) {
 		eb_debug(DBG_JBR, "No JConn!\n");
 		return;
@@ -1278,7 +1275,6 @@ void JABBERLogout(void *data)
 		eb_debug(DBG_JBR, "No ela!\n");
 		return;
 	}
-	jlad = ela->protocol_local_account_data;
 
 	if (ref_count > 0)
 		ref_count--;

@@ -109,7 +109,6 @@ static void rename_notes(char *onick, char *nnick)
 static int plugin_init()
 {
 	input_list *il = g_new0(input_list, 1);
-	int result = 0;
 
 	eb_debug(DBG_MOD, "notes init\n");
 	notes_tag1 =
@@ -124,7 +123,7 @@ static int plugin_init()
 		eb_add_menu_item("Notes", EB_CONTACT_MENU, notes_feature,
 		ebmCONTACTDATA, NULL);
 	if (!notes_tag2) {
-		result = eb_remove_menu_item(EB_CHAT_WINDOW_MENU, notes_tag1);
+		(void)eb_remove_menu_item(EB_CHAT_WINDOW_MENU, notes_tag1);
 		eb_debug(DBG_MOD,
 			"Error!  Unable to add Notes menu to contact menu\n");
 		return (-1);
@@ -200,12 +199,11 @@ static void notes_feature(ebmCallbackData *data)
 	pid = fork();
 	if (pid == 0) {
 		char *args[3];
-		int e;
 
 		args[0] = g_strdup(plugin_info.prefs->widget.entry.value);
 		args[1] = g_strdup(cmd_buff);
 		args[2] = NULL;
-		e = execvp(args[0], args);
+		(void)execvp(args[0], args);
 		g_free(args[0]);
 		g_free(args[1]);
 		_exit(0);

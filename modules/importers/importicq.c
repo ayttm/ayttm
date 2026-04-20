@@ -165,9 +165,9 @@ gint find_idx_entry(int handle, struct idxEntry *entry, guint32 type, gint mode)
 		entry->dat_number = 0;
 	}
 	while (wrong_type(entry, type) && (entry->next != -1)) {
-		read(handle, entry, 20);
+		(void)read(handle, entry, 20);
 		while (entry->status != -2 && (entry->next != -1)) {
-			read(handle, entry, 20);
+			(void)read(handle, entry, 20);
 			if (entry->next != -1)
 				lseek(handle, entry->next, SEEK_SET);
 		}
@@ -185,7 +185,7 @@ void pass_strings(int handle, guint32 number, gint loop_pre_inc, gint post_inc)
 	guint16 length, i;
 	for (i = 0; i < number; i++) {
 		lseek(handle, loop_pre_inc, SEEK_CUR);
-		read(handle, &length, 2);	/*get the length of the string */
+		(void)read(handle, &length, 2);	/*get the length of the string */
 		lseek(handle, length, SEEK_CUR);
 	}
 	lseek(handle, post_inc, SEEK_CUR);
@@ -198,12 +198,12 @@ void parse_my_details(int dat, struct my_details *my_details)
 	guint32 length;
 
 	lseek(dat, 0x2a, SEEK_CUR);	/*step to number of vaw entries 47 */
-	read(dat, &length, 4);
+	(void)read(dat, &length, 4);
 	pass_strings(dat, length, 10, 40);
-	read(dat, &length, 4);
+	(void)read(dat, &length, 4);
 	for (; length > 0; length--) {
 		pass_strings(dat, 1, 0, 0);
-		read(dat, &property_value, 1);
+		(void)read(dat, &property_value, 1);
 		switch (property_value) {
 		case 'e':
 			lseek(dat, 1, SEEK_CUR);
@@ -222,19 +222,19 @@ void parse_my_details(int dat, struct my_details *my_details)
 			break;
 		}
 	}
-	read(dat, &length, 2);
+	(void)read(dat, &length, 2);
 	if (length == 0)
 		my_details->user_name[0] = '\0';
-	read(dat, &my_details->user_name, length);
-	read(dat, &length, 2);
+	(void)read(dat, &my_details->user_name, length);
+	(void)read(dat, &length, 2);
 	if (length == 0)
 		my_details->nick_name[0] = '\0';
-	read(dat, &my_details->nick_name, length);
+	(void)read(dat, &my_details->nick_name, length);
 	pass_strings(dat, 3, 0, 0);	/*step over, first name, last name and primary e-mail */
-	read(dat, &my_details->uin, 4);
+	(void)read(dat, &my_details->uin, 4);
 	lseek(dat, 15, SEEK_CUR);	/*gender, country and age */
 	pass_strings(dat, 6, 0, 12);	/*step over city, state, add. text, homepage, home phone, notes, zip code */
-	read(dat, &length, 4);	/*number of phonebook entries */
+	(void)read(dat, &length, 4);	/*number of phonebook entries */
 	for (; length > 0; length--) {
 		pass_strings(dat, 4, 0, 2);
 		pass_strings(dat, 1, 0, 0);
@@ -270,7 +270,7 @@ static gint icq_get_groups(int idx, int dat, struct groups group_array[],
 	}
 	lseek(dat, entry.dat_offset, SEEK_SET);
 	lseek(dat, 12, SEEK_CUR);
-	read(dat, &length, 1);
+	(void)read(dat, &length, 1);
 	if (length != 0xe4)
 		return 0;
 
@@ -278,11 +278,11 @@ static gint icq_get_groups(int idx, int dat, struct groups group_array[],
 	parse_my_details(dat, my_details);
 	pass_strings(dat, 1, 0, 18);	/*PASSWORD! */
 	pass_strings(dat, 3, 0, 21);	/*??? */
-	read(dat, &length, 4);
+	(void)read(dat, &length, 4);
 	for (i = 0; length > 0; length--) {
-		read(dat, &group_array[i].number, 4);
-		read(dat, &group_length, 2);
-		read(dat, group_array[i].name, group_length);
+		(void)read(dat, &group_array[i].number, 4);
+		(void)read(dat, &group_length, 2);
+		(void)read(dat, group_array[i].name, group_length);
 		lseek(dat, 6, SEEK_CUR);	/*unused and open/closed flag */
 		i++;
 	}
@@ -316,16 +316,16 @@ guint32 get_contact(int idx, int dat, struct groups groups[],
 	while (entry->next != -1) {
 		lseek(dat, entry->dat_offset, SEEK_SET);
 		lseek(dat, 4, SEEK_CUR);
-		read(dat, &stored, 4);
+		(void)read(dat, &stored, 4);
 		if ((stored == 1) || (stored == 2)) {
 			lseek(dat, 4, SEEK_CUR);
-			read(dat, &type, 1);
+			(void)read(dat, &type, 1);
 			if (type == 0xe5) {
 				lseek(dat, 21, SEEK_CUR);
-				read(dat, &magic, 4);	/*status flag, 5==deleted??? */
+				(void)read(dat, &magic, 4);	/*status flag, 5==deleted??? */
 				if ((magic == 2) || (magic == 3)
 					|| (magic == 12)) {
-					read(dat, &folder, 4);
+					(void)read(dat, &folder, 4);
 					my_details->folder =
 						((stored ==
 							1) ? folder :
@@ -339,11 +339,11 @@ guint32 get_contact(int idx, int dat, struct groups groups[],
 
 					group_name = groups[i].name;
 					i = 0;
-					while (group_name != 0 && i < 30) {
+					while (group_name != 0 && i < 29) {
 						my_details->group[i++] =
 							*group_name++;
 					}
-					my_details->group[i++] = 0;
+					my_details->group[i] = 0;
 					return 1;
 				}
 			}

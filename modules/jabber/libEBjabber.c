@@ -289,7 +289,7 @@ int JABBER_Login(char *handle, char *passwd, char *host,
 	} else if (!strchr(handle, '/'))
 		snprintf(jid, 256, "%s/ayttm", handle);
 	else
-		strncpy(jid, handle, 256);
+		g_strlcpy(jid, handle, 256);
 
 	/* Extract the server name */
 	strcpy(server, jid);
@@ -299,7 +299,7 @@ int JABBER_Login(char *handle, char *passwd, char *host,
 
 	eb_debug(DBG_JBR, "jid: %s\n", jid);
 	JConn = JCnewConn();
-	strncpy(JConn->jid, jid, LINE_LENGTH);
+	g_strlcpy(JConn->jid, jid, LINE_LENGTH);
 	/* We assume we have an account, and don't need to register one */
 	JConn->reg_flag = 0;
 	JConn->conn = jab_new(jid, passwd, jlad->connect_server);
@@ -357,11 +357,11 @@ int JABBER_SendChatRoomMessage(JABBER_Conn *JConn, char *room_name,
 	}
 
 	if (strstr(room_name, "@")) {
-		sprintf(to, "%s", room_name);
-		sprintf(from, "%s/%s", room_name, nick);
+		snprintf(to, sizeof(to), "%s", room_name);
+		snprintf(from, sizeof(from), "%s/%s", room_name, nick);
 	} else {
-		sprintf(to, "%s@%s", room_name, agent->alias);
-		sprintf(from, "%s@%s/%s", room_name, agent->alias, nick);
+		snprintf(to, sizeof(to), "%s@%s", room_name, agent->alias);
+		snprintf(from, sizeof(from), "%s@%s/%s", room_name, agent->alias, nick);
 	}
 	x = jutil_msgnew(TMSG_GROUPCHAT, to, NULL, message);
 	xmlnode_put_attrib(x, "from", from);
@@ -428,7 +428,7 @@ int JABBER_AddContact(JABBER_Conn *JConn, char *handle)
 			}
 			JD = calloc(sizeof(JABBER_Dialog), 1);
 			JD->heading = "Pick an account";
-			sprintf(buffer,
+			snprintf(buffer, sizeof(buffer),
 				"Unable to automatically determine which account to use for %s:\n"
 				"Please select the account that can talk to this buddy's server",
 				handle);
@@ -598,9 +598,9 @@ int JABBER_LeaveChatRoom(JABBER_Conn *JConn, char *room_name, char *nick)
 		return (-1);
 	}
 	if (strstr(room_name, "@"))
-		sprintf(buffer, "%s/%s", room_name, nick);
+		snprintf(buffer, sizeof(buffer), "%s/%s", room_name, nick);
 	else
-		sprintf(buffer, "%s@%s/%s", room_name, agent->alias, nick);
+		snprintf(buffer, sizeof(buffer), "%s@%s/%s", room_name, agent->alias, nick);
 	z = jutil_presnew(JPACKET__UNAVAILABLE, buffer, "Online");
 	jab_send(JConn->conn, z);
 	xmlnode_free(z);
@@ -673,7 +673,7 @@ void print_new_gmail(JABBER_Conn *JConn, xmlnode x)
 		g_free(JIM.msg);
 	}
 	eb_debug(DBG_JBR, "old %s, new %s\n", nt_time, result_time);
-	strncpy(nt_time, result_time, 13);
+	g_strlcpy(nt_time, result_time, 13);
 }
 
 void JABBER_Send_typing(JABBER_Conn *JConn, const char *from, const char *to,
@@ -723,7 +723,7 @@ void JABBER_Send_typing(JABBER_Conn *JConn, const char *from, const char *to,
 	if (!from)
 		return 0;
 
-	strncpy(buffer, from, 256);
+	g_strlcpy(buffer, from, 256);
 	strtok(buffer, "/");
 	ptr = strchr(buffer, '@');
 	if (ptr)
@@ -741,7 +741,7 @@ void JABBER_Send_typing(JABBER_Conn *JConn, const char *from, const char *to,
 	}
 
 	/ * test with @ * /
-	strncpy(buffer, from, 256);
+	g_strlcpy(buffer, from, 256);
 	if (strchr(buffer, '/'))
 		*strchr(buffer, '/') = 0;
 
@@ -783,9 +783,9 @@ int JABBER_JoinChatRoom(JABBER_Conn *JConn, char *room_name, char *nick)
 	 */
 
 	if (!strstr(room_name, "@"))
-		sprintf(buffer, "%s@%s/%s", room_name, agent->alias, nick);
+		snprintf(buffer, sizeof(buffer), "%s@%s/%s", room_name, agent->alias, nick);
 	else
-		sprintf(buffer, "%s/%s", room_name, nick);
+		snprintf(buffer, sizeof(buffer), "%s/%s", room_name, nick);
 
 	z = jutil_presnew(JPACKET__GROUPCHAT, buffer, "Online");
 	xmlnode_put_attrib(z, "id", "GroupChat");
@@ -838,17 +838,17 @@ void j_add_agent(char *name, char *alias, char *desc, char *service, char *host,
 		g_free(agent);
 		return;
 	}
-	strncpy(agent->host, host, 256);
+	g_strlcpy(agent->host, host, 256);
 	if (agent_type)
-		strncpy(agent->type, agent_type, 256);
+		g_strlcpy(agent->type, agent_type, 256);
 	if (name)
-		strncpy(agent->name, name, 256);
+		g_strlcpy(agent->name, name, 256);
 	if (alias)
-		strncpy(agent->alias, alias, 256);
+		g_strlcpy(agent->alias, alias, 256);
 	if (desc)
-		strncpy(agent->desc, desc, 256);
+		g_strlcpy(agent->desc, desc, 256);
 	if (service)
-		strncpy(agent->service, service, 256);
+		g_strlcpy(agent->service, service, 256);
 
 	agent_list = g_list_append(agent_list, agent);
 	return;
@@ -912,7 +912,7 @@ void j_on_packet_handler(jconn conn, jpacket packet)
 		} else {
 			subj = NULL;
 			if (body)
-				strncpy(buff, body, 8192);
+				g_strlcpy(buff, body, 8192);
 			else
 				buff[0] = '\0';
 		}

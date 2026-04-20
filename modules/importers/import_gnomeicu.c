@@ -124,9 +124,10 @@ void import_gnomeicu_accounts(ebmCallbackData *data)
 	}
 	ICQ_ID = get_service_id("ICQ");
 	while (!feof(fp)) {
-		fgets(c, 1024, fp);
+		if (!fgets(c, 1024, fp))
+			break;
 		g_strchomp(c);
-		if (!g_strncasecmp(c, "[NewContacts]",
+		if (!g_ascii_strncasecmp(c, "[NewContacts]",
 				strlen("[NewContacts]") + 1))
 			break;
 	}
@@ -138,7 +139,8 @@ void import_gnomeicu_accounts(ebmCallbackData *data)
 	if (!find_grouplist_by_name("GnomeICU Users"))
 		add_group("GnomeICU Users");
 	while (!feof(fp)) {
-		fgets(c, 1024, fp);
+		if (!fgets(c, 1024, fp))
+			break;
 		if (feof(fp))
 			break;
 		g_strchomp(c);

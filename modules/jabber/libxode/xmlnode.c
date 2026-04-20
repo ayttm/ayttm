@@ -40,7 +40,10 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
-#include <glib.h>(pool p, const char *name, unsigned int type)
+#include <glib.h>
+
+/* Internal routines */
+xmlnode _xmlnode_new(pool p, const char *name, unsigned int type)
 {
 	xmlnode result = NULL;
 	if (type > NTYPE_LAST)

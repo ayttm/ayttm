@@ -40,7 +40,9 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
-#include <glib.h>(const char *str)
+#include <glib.h>
+
+char *j_strdup(const char *str)
 {
 	if (str == NULL)
 		return NULL;

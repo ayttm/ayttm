@@ -39,7 +39,7 @@
 # include <process.h>
 #endif
 
-#include <glib.h>		/* for llist_to_glist and glist_to_llist */
+#include <glib.h>		/* for GList and llist_to_glist */
 #include "contact.h"
 #include "conversation.h"
 

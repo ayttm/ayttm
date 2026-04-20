@@ -73,7 +73,7 @@ contact_list:
 	COMMENT contact_list { $$ = $2; }
 |	contact contact_list { 
 		if($1)
-			$$ = g_list_insert_sorted( $2, $1, contact_cmp ); 
+			$$ = g_list_insert_sorted( $2, $1, (GCompareFunc)contact_cmp );
 		else
 			$$ = $2;
 	}
@@ -151,8 +151,8 @@ contact:
 account_list:
 	COMMENT account_list { $$=$2; }
 | 	account account_list { 
-		if($1 != NULL && !g_list_find_custom($2, $1, account_cmp)) {
-			$$ = g_list_insert_sorted( $2, $1, account_cmp); 
+		if($1 != NULL && !g_list_find_custom($2, $1, (GCompareFunc)account_cmp)) {
+			$$ = g_list_insert_sorted( $2, $1, (GCompareFunc)account_cmp);
 			if(cur_contact->default_chatb == -1)
 				cur_contact->default_filetransb = cur_contact->default_chatb = $1->service_id;
 		} else {

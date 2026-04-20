@@ -69,7 +69,7 @@ group:
 ;
 
 contact_list:
-		contact_list contact { $$ = g_list_insert_sorted( $1, $2, contact_cmp ); }
+		contact_list contact { $$ = g_list_insert_sorted( $1, $2, (GCompareFunc)contact_cmp ); }
 	|	EPSILON { $$ = 0; }
 ;
 
@@ -117,7 +117,7 @@ contact:
 ;	
 
 account_list:
-	 	account_list account { $$ = g_list_insert_sorted( $1, $2, account_cmp ); }
+		account_list account { $$ = g_list_insert_sorted( $1, $2, (GCompareFunc)account_cmp ); }
 	 |	EPSILON { $$ = 0; }
 
 ;
