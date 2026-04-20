@@ -109,7 +109,7 @@ void write_account_list()
 		char *pwd = value_pair_get_value(config, "PASSWORD");
 		int enc_type =
 			1 + (int)(rand() / (RAND_MAX + 1.0) * (MAX_ENC - 1));
-		char e[2];
+		char e[12];
 		snprintf(e, sizeof(e), "%d", enc_type);
 		config = value_pair_add(config, "enc_type", e);
 		config = value_pair_add(config, "password_encoded",

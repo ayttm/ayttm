@@ -896,29 +896,22 @@ GtkWidget *_volume_selection(const char *inLabelString, GtkWidget *vbox, char *p
 static void _init_sound_files (PrefSet *me)
 {
 	GtkWidget *top_container;
-	GtkWidget *arrive;
-	GtkWidget *away;
-	GtkWidget *leave;
-	GtkWidget*send;
-	GtkWidget *receive;
-	GtkWidget *firstmsg;
-	GtkWidget *volume;
 	GtkWidget *table;
 
 	top_container = _prep_top_container(me);
 
 	table = gtk_table_new(6, 4, FALSE);
 
-	arrive = _sound_file_add_line(_("Contact signs on: "), "BuddyArriveFilename", table, 0);
-	away = _sound_file_add_line(_("Contact goes away: "), "BuddyAwayFilename", table, 1);
-	leave = _sound_file_add_line(_("Contact signs off: "), "BuddyLeaveFilename", table, 2);
-	send = _sound_file_add_line(_("Message sent: "), "SendFilename", table, 3);
-	receive = _sound_file_add_line(_("Message received: "), "ReceiveFilename", table, 4);
-	firstmsg = _sound_file_add_line(_("First message received: "), "FirstMsgFilename", table, 5);
+	(void)_sound_file_add_line(_("Contact signs on: "), "BuddyArriveFilename", table, 0);
+	(void)_sound_file_add_line(_("Contact goes away: "), "BuddyAwayFilename", table, 1);
+	(void)_sound_file_add_line(_("Contact signs off: "), "BuddyLeaveFilename", table, 2);
+	(void)_sound_file_add_line(_("Message sent: "), "SendFilename", table, 3);
+	(void)_sound_file_add_line(_("Message received: "), "ReceiveFilename", table, 4);
+	(void)_sound_file_add_line(_("First message received: "), "FirstMsgFilename", table, 5);
 
 	gtk_box_pack_start(GTK_BOX(top_container), table, FALSE, FALSE, 10);
 
-	volume = _volume_selection(_("Relative volume (dB)"), top_container, "SoundVolume");
+	(void)_volume_selection(_("Relative volume (dB)"), top_container, "SoundVolume");
 }
 
 static void _set_alt_browser_path(GtkFileChooserButton *button, gpointer data)

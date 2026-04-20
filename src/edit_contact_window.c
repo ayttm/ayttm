@@ -71,7 +71,6 @@ void edit_contact_window_new(struct contact *c)
 	if (!window_open) {
 		GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
 		GtkWidget *label;
-		guint label_key;
 		GtkWidget *frame;
 		GtkWidget *table;
 		GList *list;
@@ -86,7 +85,6 @@ void edit_contact_window_new(struct contact *c)
 		/* Contact */
 
 		label = gtk_label_new_with_mnemonic(_("_Contact:"));
-		label_key = gtk_label_get_mnemonic_keyval(GTK_LABEL(label));
 		gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 5);
 		gtk_widget_show(label);
 		gtk_table_attach(GTK_TABLE(table), hbox, 0, 1, 0, 1, GTK_FILL,
@@ -104,7 +102,6 @@ void edit_contact_window_new(struct contact *c)
 		/* Group */
 
 		label = gtk_label_new_with_mnemonic(_("_Group: "));
-		label_key = gtk_label_get_mnemonic_keyval(GTK_LABEL(label));
 		gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 5);
 		gtk_widget_show(label);
 
@@ -133,7 +130,6 @@ void edit_contact_window_new(struct contact *c)
 		/* Default service */
 
 		label = gtk_label_new_with_mnemonic(_("Default _Protocol: "));
-		label_key = gtk_label_get_mnemonic_keyval(GTK_LABEL(label));
 		gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 5);
 		gtk_widget_show(label);
 		gtk_table_attach(GTK_TABLE(table), hbox, 0, 1, 2, 3, GTK_FILL,

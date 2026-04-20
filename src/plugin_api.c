@@ -251,9 +251,9 @@ void eb_timeout_remove(int tag)
 
 /* Debugging */
 #ifdef __STDC__
-int EB_DEBUG(const char *func, char *file, int line, const char *fmt, ...)
+int EB_DEBUG(const char *func, const char *file, int line, const char *fmt, ...)
 #else
-int EB_DEBUG(const char *func, char *file, int line, const char *fmt, va_alist)
+int EB_DEBUG(const char *func, const char *file, int line, const char *fmt, va_alist)
 char *fmt;
 va_dcl
 #endif

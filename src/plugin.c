@@ -128,13 +128,20 @@ static void SetPluginInfo(PLUGIN_INFO *pi, const char *name, AyttmPlugin Module,
 		plugins = g_list_append(plugins, epi);
 		SetPref(EB_PLUGIN_LIST, plugins);
 	} else if (force == TRUE || epi->status != PLUGIN_LOADED) {
-		if (epi->service)
+		if (epi->service) {
 			g_free(epi->service);
+			epi->service = NULL;
+		}
 		g_free(epi->name);
+		epi->name = NULL;
 		g_free(epi->pi.module_name);
+		epi->pi.module_name = NULL;
 		g_free(epi->pi.description);
+		epi->pi.description = NULL;
 		g_free(epi->pi.version);
+		epi->pi.version = NULL;
 		g_free(epi->pi.date);
+		epi->pi.date = NULL;
 	} else			/* A plugin is already succesfully load */
 		return;
 	epi->status = status;
@@ -152,6 +159,8 @@ static void SetPluginInfo(PLUGIN_INFO *pi, const char *name, AyttmPlugin Module,
 	epi->name = g_strdup(name);
 	if (service)
 		epi->service = g_strdup(service);
+	else
+		epi->service = NULL;
 	epi->Module = Module;
 
 	if (status == PLUGIN_CANNOT_LOAD) {
@@ -268,7 +277,7 @@ void load_modules(void)
 	/* UNUSED struct dirent **namelist=NULL; */
 	char buf[1024], *modules_path = NULL, *cur_path = NULL;
 	char *tok_buf = NULL, *tok_buf_old = NULL;
-	int n = 0, success = 0;
+	int n = 0;
 	struct dirent *dp;
 	DIR *dirp;
 
@@ -306,7 +315,7 @@ void load_modules(void)
 				continue;
 			} else if (select_module_entry(dp)) {
 				n++;
-				success = load_module(cur_path, dp->d_name);
+				(void)load_module(cur_path, dp->d_name);
 			}
 		}
 		if (n == 0) {

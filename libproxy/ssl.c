@@ -80,8 +80,13 @@ SSL *ssl_get_socket(int sock, const char *host, int port, void *data)
 	 * (RFC 8996) and should not be negotiated. */
 	SSL_CTX_set_min_proto_version(ssl_ctx, TLS1_2_VERSION);
 
-	/* Set default certificate paths */
-	SSL_CTX_set_default_verify_paths(ssl_ctx);
+	/* Load default CA certificate paths; if this fails, TLS connections
+	 * may fail later with unhelpful errors or silently skip verification. */
+	if (!SSL_CTX_set_default_verify_paths(ssl_ctx)) {
+		eb_debug(DBG_CORE,
+			"Warning: SSL_CTX_set_default_verify_paths() failed; "
+			"CA verification may not work correctly\n");
+	}
 
 	/* Require peer certificate verification to prevent MITM attacks.
 	 * Connections to servers with invalid or untrusted certificates

@@ -125,7 +125,7 @@ static void reload_service_accounts(int service_id)
 	GList *account_pairs = NULL;
 	eb_local_account *oela = NULL;
 	eb_local_account *nela = NULL;
-	const int buffer_size = 256;
+	const int buffer_size = 2048;
 	char buff[buffer_size];
 	char buff2[buffer_size];
 	GList *saved_info = NULL;

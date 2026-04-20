@@ -462,7 +462,7 @@ static gint delete_event_cb(GtkWidget *widget, GdkEvent *event, gpointer data)
 void show_smileys_cb(smiley_callback_data *data)
 {
 	eb_local_account *account;
-	GList *smileys = NULL;
+	GList *smiley_list = NULL;
 	protocol_smiley *msmiley = NULL;
 	GtkWidget *smileys_table = NULL;
 	GtkWidget *button = NULL;
@@ -492,12 +492,12 @@ void show_smileys_cb(smiley_callback_data *data)
 	}
 
 	if (account && RUN_SERVICE(account)->get_smileys)
-		smileys = RUN_SERVICE(account)->get_smileys();
+		smiley_list = RUN_SERVICE(account)->get_smileys();
 	else
 		return;
-	for (; smileys; smileys = smileys->next) {
+	for (; smiley_list; smiley_list = smiley_list->next) {
 		gboolean already_done = FALSE;
-		msmiley = smileys->data;
+		msmiley = smiley_list->data;
 		for (l = done; l; l = l->next) {
 			protocol_smiley *done_smiley = l->data;
 			if (!strcmp(msmiley->name, done_smiley->name)) {
@@ -524,9 +524,6 @@ void show_smileys_cb(smiley_callback_data *data)
 		dsmile = get_smiley_by_name_and_service(msmiley->name,
 			GET_SERVICE(account).name);
 		if (dsmile != NULL) {
-			GtkWidget *parent = NULL;
-			if (data && data->c_window)
-				parent = data->c_window->window;
 			icon = gdk_pixbuf_new_from_xpm_data((const char **)
 				dsmile->pixmap);
 			iconwid = gtk_image_new_from_pixbuf(icon);

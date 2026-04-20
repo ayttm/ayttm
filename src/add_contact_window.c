@@ -303,9 +303,7 @@ static void show_add_defined_contact_window(struct contact *cont,
 	grouplist *grp, struct contact *con)
 {
 	GtkWidget *hbox;
-	GtkWidget *vbox;
 	GtkWidget *label;
-	guint label_key;
 	GtkWidget *table;
 	GtkWidget *frame;
 	GList *list;
@@ -328,13 +326,11 @@ static void show_add_defined_contact_window(struct contact *cont,
 	gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 	gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 	gtk_container_set_border_width(GTK_CONTAINER(table), 5);
-	vbox = gtk_vbox_new(FALSE, 5);
 	hbox = gtk_hbox_new(FALSE, 0);
 
 	/*Section for adding account */
 
 	label = gtk_label_new_with_mnemonic(_("_Account: "));
-	label_key = gtk_label_get_mnemonic_keyval(GTK_LABEL(label));
 	gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 5);
 	gtk_widget_show(label);
 	gtk_table_attach(GTK_TABLE(table), hbox, 0, 1, 0, 1, GTK_FILL, GTK_FILL,
@@ -355,7 +351,6 @@ static void show_add_defined_contact_window(struct contact *cont,
 	hbox = gtk_hbox_new(FALSE, 0);
 
 	label = gtk_label_new_with_mnemonic(_("_Local account: "));
-	label_key = gtk_label_get_mnemonic_keyval(GTK_LABEL(label));
 	gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 5);
 	gtk_widget_show(label);
 	gtk_table_attach(GTK_TABLE(table), hbox, 0, 1, 1, 2, GTK_FILL, GTK_FILL,
@@ -368,7 +363,7 @@ static void show_add_defined_contact_window(struct contact *cont,
 	for (walk = accounts; walk; walk = walk->next) {
 		eb_local_account *ela = (eb_local_account *)walk->data;
 		if (ela) {
-			char str[255];
+			char str[1024];
 			snprintf(str, sizeof(str), "[%s] %s",
 				get_service_name(ela->service_id), ela->handle);
 
@@ -387,7 +382,6 @@ static void show_add_defined_contact_window(struct contact *cont,
 	hbox = gtk_hbox_new(FALSE, 0);
 
 	label = gtk_label_new_with_mnemonic(_("Contact: "));
-	label_key = gtk_label_get_mnemonic_keyval(GTK_LABEL(label));
 	gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 5);
 	gtk_widget_show(label);
 	gtk_table_attach(GTK_TABLE(table), hbox, 0, 1, 2, 3, GTK_FILL, GTK_FILL,
@@ -422,7 +416,6 @@ static void show_add_defined_contact_window(struct contact *cont,
 	hbox = gtk_hbox_new(FALSE, 0);
 
 	label = gtk_label_new_with_mnemonic(_("_Group: "));
-	label_key = gtk_label_get_mnemonic_keyval(GTK_LABEL(label));
 	gtk_box_pack_end(GTK_BOX(hbox), label, FALSE, FALSE, 5);
 	gtk_widget_show(label);
 	gtk_table_attach(GTK_TABLE(table), hbox, 0, 1, 3, 4, GTK_FILL, GTK_FILL,

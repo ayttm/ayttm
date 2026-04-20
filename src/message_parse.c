@@ -149,7 +149,7 @@ static void send_file2(void *ptr)
 	}
 
 	if ((i - 1) % 1024 != 0) {
-		write(sfs->s, buff, (i - 1) % 1024);
+		(void)write(sfs->s, buff, (i - 1) % 1024);
 	}
 
 	signal(SIGPIPE, SIG_DFL);
@@ -221,10 +221,10 @@ static void send_file(char *filename, int s)
 		}
 	}
 	snprintf(buff, 5, "%05ld", strlen(filename + i + 1));
-	write(s, buff, 5);
-	write(s, filename + i + 1, strlen(filename + i + 1));
+	(void)write(s, buff, 5);
+	(void)write(s, filename + i + 1, strlen(filename + i + 1));
 	filelen = htonl(fileinfo.st_size);
-	write(s, &filelen, 4);
+	(void)write(s, &filelen, 4);
 
 	/*
 	   FD_ZERO(&set);
@@ -239,7 +239,7 @@ static void send_file(char *filename, int s)
 	   gtk_main_iteration();
 	   }
 	 */
-	read(s, accept, 10);
+	(void)read(s, accept, 10);
 
 	if (!strcmp(accept, "ACCEPT")) {
 		progress_callback_data *pcd =
@@ -307,7 +307,7 @@ static void accept_file(void *data, int result)
 		pcd->input = eb_input_add(fd, EB_INPUT_READ, get_file2, pcd);
 	} else {
 		char val[10] = "DENY";
-		write(fd, val, 10);
+		(void)write(fd, val, 10);
 		close(fd);
 		fclose(fp);
 		xfer_in_progress = 0;
@@ -352,10 +352,21 @@ static void get_file(int s)
 	recv(fd, &filelen, 4, 0);
 	filelen = ntohl(filelen);
 
-	snprintf(buffer, 1024, "Transferring %s...", buffer2);
+	snprintf(buffer, sizeof(buffer), "Transferring %.*s...",
+		(int)(sizeof(buffer) - 17), buffer2);
 	pcd->tag = ay_progress_bar_add(buffer, filelen, NULL, NULL);
 
-	snprintf(buffer, 1024, "%s/%s", getenv("HOME"), buffer2);
+	{
+		/* Strip directory components from the received filename to
+		 * prevent path traversal attacks (e.g. "../../.bashrc").
+		 * Use g_get_home_dir() rather than getenv("HOME") to avoid
+		 * treating the home directory as a tainted path component. */
+		char *safe_name = g_path_get_basename(buffer2);
+		char *dest_path = g_build_filename(g_get_home_dir(), safe_name, NULL);
+		g_strlcpy(buffer, dest_path, sizeof(buffer));
+		g_free(dest_path);
+		g_free(safe_name);
+	}
 	printf("receiving file %s\n", buffer);
 	amount_received = 0;
 	fp = fopen(buffer, "wb");

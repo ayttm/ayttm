@@ -79,13 +79,13 @@ static void read_contacts()
 	for (node = accounts; node; node = node->next) {
 		eb_local_account *ela = node->data;
 
-		GList *pairs = RUN_SERVICE(ela)->write_local_config(ela);
+		GList *local_pairs = RUN_SERVICE(ela)->write_local_config(ela);
 
 		gtk_list_store_append(account_list_store, &insert);
 		gtk_list_store_set(account_list_store, &insert,
 			SERVICE_TYPE, eb_services[ela->service_id].name,
-			USER_NAME, value_pair_get_value(pairs, "SCREEN_NAME"),
-			PASSWORD, value_pair_get_value(pairs, "PASSWORD"), -1);
+			USER_NAME, value_pair_get_value(local_pairs, "SCREEN_NAME"),
+			PASSWORD, value_pair_get_value(local_pairs, "PASSWORD"), -1);
 
 		if (ela->connect_at_startup)
 			gtk_list_store_set(account_list_store, &insert,
@@ -94,7 +94,7 @@ static void read_contacts()
 			gtk_list_store_set(account_list_store, &insert,
 				CONNECT, FALSE, -1);
 
-		value_pair_free(pairs);
+		value_pair_free(local_pairs);
 		num_accounts++;
 	}
 }

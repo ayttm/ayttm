@@ -84,7 +84,7 @@ static void action_do_action(char *value, void *data)
 	child = fork();
 	if (child == 0) {
 		/* in child */
-		system(cmd);
+		(void)system(cmd);
 		g_free(cmd);
 		_exit(0);
 	} else if (child > 0) {

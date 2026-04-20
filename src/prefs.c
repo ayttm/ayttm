@@ -112,193 +112,7 @@ static char *s_strip_whitespace(char *inStr)
 	return (inStr);
 }
 
-static char *s_strdup_allow_null(const char *inStr)
-{
-	if (inStr == NULL)
-		return (NULL);
 
-	return (g_strdup(inStr));
-}
-
-static char *s_strdup_pref(const char *inStr)
-{
-	char *returnStr = NULL;
-
-	returnStr = g_malloc0(MAX_PREF_LEN);
-
-	if (inStr == NULL)
-		returnStr[0] = '\0';
-	else
-		strncpy(returnStr, inStr, MAX_PREF_LEN);
-
-	return (returnStr);
-}
-
-/** A quick hack to strip stuff from the beginning and end of a string.
-
-	@param	inFromBeginning	text to strip from beginning
-	@param	inFromEnd		text to strip from the end
-	@param	inStr			the string we're stripping from
-	
-	@return	newly allocated stripped string [caller responsible for freeing mem]
-*/
-static char *s_strdup_strip(const char *inFromBeginning, const char *inFromEnd,
-	const char *inStr)
-{
-	char *returnStr = NULL;
-	const char *startPtr = inStr;
-	const char *endPtr = NULL;
-	int totalLen = 0;
-
-	if (inStr == NULL)
-		return (NULL);
-
-	endPtr = inStr + strlen(inStr);
-
-	if (inFromBeginning != NULL) {
-		const int beginLen = strlen(inFromBeginning);
-
-		if (!strncmp(inFromBeginning, inStr, beginLen))
-			startPtr = inStr + beginLen;
-	}
-
-	if (inFromEnd != NULL) {
-		const int endLen = strlen(inFromEnd);
-
-		if (!strncmp(inFromEnd, endPtr - endLen, endLen))
-			endPtr = endPtr - endLen;
-	}
-
-	totalLen = endPtr - startPtr;
-	assert(totalLen > 0);
-
-	returnStr = g_malloc0(totalLen + 1);
-	memcpy(returnStr, startPtr, totalLen);
-	returnStr[totalLen] = '\0';
-
-	return (returnStr);
-}
-
-static input_list *s_copy_input_list(input_list *inList)
-{
-	input_list *new_list = NULL;
-	input_list *list = inList;
-	input_list *prev = NULL;
-
-	while (list != NULL) {
-		input_list *new_item = g_new0(input_list, 1);
-
-		new_item->type = list->type;
-		new_item->next = NULL;
-
-		switch (list->type) {
-		case EB_INPUT_CHECKBOX:
-			{
-				new_item->name =
-					s_strdup_allow_null(list->name);
-				new_item->label =
-					s_strdup_allow_null(list->label);
-				new_item->widget.checkbox.value =
-					g_new0(int, 1);
-
-				if (list->widget.checkbox.value != NULL)
-					*(new_item->widget.checkbox.value) =
-						*(list->widget.checkbox.value);
-
-			}
-			break;
-
-		case EB_INPUT_ENTRY:
-		case EB_INPUT_PASSWORD:
-			{
-				new_item->name =
-					s_strdup_allow_null(list->name);
-				new_item->label =
-					s_strdup_allow_null(list->label);
-				new_item->widget.entry.value =
-					s_strdup_pref(list->widget.entry.value);
-				new_item->widget.entry.entry = NULL;	/* this will be filled in when rendered - we ignore this field */
-			}
-			break;
-
-		case EB_INPUT_LIST:
-			{
-				new_item->name =
-					s_strdup_allow_null(list->name);
-				new_item->label =
-					s_strdup_allow_null(list->label);
-				new_item->widget.listbox.value =
-					g_new0(int, 1);
-				new_item->widget.listbox.widget = NULL;	/* this will be filled in when rendered - we ignore this field */
-				new_item->widget.listbox.list =
-					list->widget.listbox.list;
-				if (list->widget.listbox.value != NULL)
-					*(new_item->widget.listbox.value) =
-						*(list->widget.listbox.value);
-			}
-			break;
-		default:
-			assert(FALSE);
-			break;
-		}
-
-		if (prev == NULL)
-			new_list = new_item;
-		else
-			prev->next = new_item;
-
-		prev = new_item;
-
-		list = list->next;
-	}
-
-	return (new_list);
-}
-
-static void s_destroy_input_list(input_list *inList)
-{
-	input_list *list = inList;
-
-	while (list != NULL) {
-		input_list *saved = list;
-
-		switch (list->type) {
-		case EB_INPUT_CHECKBOX:
-			{
-				g_free(list->name);
-				g_free(list->label);
-				g_free(list->widget.checkbox.value);
-			}
-			break;
-
-		case EB_INPUT_ENTRY:
-		case EB_INPUT_PASSWORD:
-			{
-				g_free(list->name);
-				g_free(list->label);
-				g_free(list->widget.entry.value);
-			}
-			break;
-
-		case EB_INPUT_LIST:
-			{
-				g_free(list->name);
-				g_free(list->label);
-				g_free(list->widget.listbox.value);
-			}
-			break;
-		default:
-			assert(FALSE);
-			break;
-		}
-
-		list = list->next;
-
-		memset(saved, 0, sizeof(input_list));
-
-		g_free(saved);
-	}
-}
 
 AyModulePrefs *ay_prefs_sift_modules(void)
 {
@@ -499,7 +313,7 @@ void ayttm_prefs_read_file(char *file)
 		return;
 	}
 
-	fgets(param, buffer_size, fp);
+	(void)fgets(param, buffer_size, fp);
 
 	while (!feof(fp)) {
 		int pref_type = CORE_PREF;
@@ -518,7 +332,7 @@ void ayttm_prefs_read_file(char *file)
 				char *plugin_name = NULL;
 				GList *session_prefs = NULL;
 
-				fgets(param, buffer_size, fp);
+				(void)fgets(param, buffer_size, fp);
 
 				s_strip_whitespace(param);
 
@@ -542,7 +356,7 @@ void ayttm_prefs_read_file(char *file)
 				for (;;) {
 					GList *old_session_prefs = NULL;
 
-					fgets(param, buffer_size, fp);
+					(void)fgets(param, buffer_size, fp);
 
 					s_strip_whitespace(param);
 
@@ -620,7 +434,7 @@ void ayttm_prefs_read_file(char *file)
 
 		cSetLocalPref(param, val);
 
-		fgets(param, buffer_size, fp);
+		(void)fgets(param, buffer_size, fp);
 	}
 
 	fclose(fp);

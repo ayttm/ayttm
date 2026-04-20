@@ -104,18 +104,18 @@ static void load_data(char *file)
 
 	while (fgets(buff, sizeof(buff), fp)) {
 		g_strchomp(buff);
-		if (!g_strncasecmp(buff, bentity, strlen(bentity))) {
+		if (!g_ascii_strncasecmp(buff, bentity, strlen(bentity))) {
 			my_data = g_new0(data, 1);
-		} else if (!g_strncasecmp(buff, eentity, strlen(eentity))) {
+		} else if (!g_ascii_strncasecmp(buff, eentity, strlen(eentity))) {
 			datalist = g_list_append(datalist, my_data);
-		} else if (!g_strncasecmp(buff, "<TITLE>", strlen("<TITLE>"))) {
+		} else if (!g_ascii_strncasecmp(buff, "<TITLE>", strlen("<TITLE>"))) {
 			reading_title = TRUE;
-		} else if (!g_strncasecmp(buff, "</TITLE>", strlen("</TITLE>"))) {
+		} else if (!g_ascii_strncasecmp(buff, "</TITLE>", strlen("</TITLE>"))) {
 			reading_title = FALSE;
-		} else if (!g_strncasecmp(buff, bvalue, strlen(bvalue))) {
+		} else if (!g_ascii_strncasecmp(buff, bvalue, strlen(bvalue))) {
 			reading_message = TRUE;
 			my_data->message = g_string_new(NULL);
-		} else if (!g_strncasecmp(buff, evalue, strlen(evalue))) {
+		} else if (!g_ascii_strncasecmp(buff, evalue, strlen(evalue))) {
 			reading_message = FALSE;
 		} else if (reading_title) {
 			strncpy(my_data->title, buff, MIN(strlen(buff),
@@ -372,22 +372,22 @@ static void write_data()
 	while (data_list) {
 		my_data = (data *)data_list->data;
 
-		fprintf(fp, bentity);
+		fprintf(fp, "%s", bentity);
 		fprintf(fp, "\n");
 		fprintf(fp, "<TITLE>\n");
 		strncpy(buff2, my_data->title, strlen(my_data->title) + 1);
 		g_strchomp(buff2);
 		fprintf(fp, "%s\n", buff2);
 		fprintf(fp, "</TITLE>\n");
-		fprintf(fp, bvalue);
+		fprintf(fp, "%s", bvalue);
 		fprintf(fp, "\n");
 		strncpy(buff2, my_data->message->str,
 			strlen(my_data->message->str) + 1);
 		g_strchomp(buff2);
 		fprintf(fp, "%s\n", buff2);
-		fprintf(fp, evalue);
+		fprintf(fp, "%s", evalue);
 		fprintf(fp, "\n");
-		fprintf(fp, eentity);
+		fprintf(fp, "%s", eentity);
 		fprintf(fp, "\n");
 
 		data_list = data_list->next;

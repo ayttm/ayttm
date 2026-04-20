@@ -386,7 +386,7 @@ static void linkify_token(GString *token)
 
 	eb_debug(DBG_HTML, "TOKEN: %s\n", token->str);
 	/* g_string_sprintf is safe */
-	g_string_sprintf(token, "<A HREF=\"%s\">%s</A>", g2->str, g->str);
+	g_string_printf(token, "<A HREF=\"%s\">%s</A>", g2->str, g->str);
 
 	g_string_free(g, TRUE);
 	g_string_free(g2, TRUE);
@@ -1505,8 +1505,8 @@ pid_t create_lock_file(char *fname)
 	} else {
 		/* this means that the file exists */
 		if ((f = fopen(fname, "r")) != NULL) {
-			char data[64], data2[64];
-			fscanf(f, "%d", &ourpid);
+			char data[64], data2[80];
+			(void)fscanf(f, "%d", &ourpid);
 			fclose(f);
 			snprintf(data, sizeof(data), "/proc/%d", ourpid);
 			if (stat(data, &sbuff) != 0) {
@@ -1523,7 +1523,7 @@ pid_t create_lock_file(char *fname)
 					perror("fopen");
 				} else {
 					char cmd[1024];
-					fgets(cmd, sizeof(cmd), fd);
+					(void)fgets(cmd, sizeof(cmd), fd);
 					printf("registered PID [%d] is from %s\n", ourpid, cmd);
 					fclose(fd);
 					if (cmd == NULL
@@ -1670,30 +1670,10 @@ eb_account *find_account_for_protocol(struct contact *c, int service)
 
 GList *llist_to_glist(GList *ll, int free_old)
 {
-	GList *g = NULL;
-	GList *l = ll;
-
-	for (; l; l = l->next)
-		g = g_list_append(g, l->data);
-
+	GList *copy = g_list_copy(ll);
 	if (free_old)
 		g_list_free(ll);
-
-	return g;
-}
-
-GList *glist_to_llist(GList *gl, int free_old)
-{
-	GList *l = NULL;
-	GList *g = gl;
-
-	for (; g; g = g->next)
-		l = g_list_append(l, g->data);
-
-	if (free_old)
-		g_list_free(gl);
-
-	return l;
+	return copy;
 }
 
 int send_url(const char *url)

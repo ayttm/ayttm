@@ -433,8 +433,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 				 const gchar *o_message)
 {
 	struct contact *remote_contact = conv->contact;
-	eb_account *remote = NULL;
-	gchar buff[BUF_SIZE], buff2[BUF_SIZE];
+	gchar buff[BUF_SIZE], buff2[BUF_SIZE + 64];
 	struct tm *cur_time;
 	time_t t;
 	GList *filter_walk;
@@ -454,7 +453,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 	/* We need to check do the filters and groups only for individuals */
 	if (!conv->is_room) {
 		char *group_name;
-		remote = find_suitable_remote_account(conv->preferred,
+		(void)find_suitable_remote_account(conv->preferred,
 			conv->contact);
 
 		if (remote_contact && remote_contact->group
@@ -576,7 +575,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 {
 	FILE *fp;
-	gchar buff[1024], buff2[1024], *buff3, color[8], name[512], *token;
+	gchar buff[1024], buff2[1088], *buff3, color[8], name[512], *token;
 	long location = -1;
 	long lastlocation = -1;
 	long beforeget;
@@ -588,7 +587,7 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 	/* find last conversation */
 	while (!feof(fp)) {
 		beforeget = ftell(fp);
-		fgets(buff, 1024, fp);
+		(void)fgets(buff, 1024, fp);
 		if (feof(fp))
 			break;
 		g_strchomp(buff);
@@ -624,7 +623,7 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 
 	/* now we display the log */
 	while (!feof(fp)) {
-		fgets(buff, 1024, fp);
+		(void)fgets(buff, 1024, fp);
 		if (feof(fp))
 			break;
 
@@ -634,13 +633,13 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 			ay_chat_window_print(conv->window, buff2);
 		else if (!strncmp(buff, _("Conversation started"),
 				strlen(_("Conversation started")))) {
-			snprintf(buff2, 1024,
+			snprintf(buff2, sizeof(buff2),
 				"<body bgcolor=#F9E589 width=*><b> %s</b></body>",
 				buff);
 			ay_chat_window_print(conv->window, buff2);
 		} else if (!strncmp(buff, _("Conversation ended"),
 				strlen(_("Conversation ended")))) {
-			snprintf(buff2, 1024,
+			snprintf(buff2, sizeof(buff2),
 				"<body bgcolor=#F9E589 width=*><b> %s</b></body>",
 				buff);
 			ay_chat_window_print(conv->window, buff2);
@@ -1017,7 +1016,7 @@ void ay_conversation_invite_fellow(Conversation *conv, const char *fellow,
 	const char *message)
 {
 	RUN_SERVICE(conv->local_user)->send_invite(conv->local_user, conv,
-		fellow, message);
+		(char *)fellow, message);
 }
 
 /* Autoreconnect conversations */

@@ -113,7 +113,7 @@ void do_trigger_action(struct contact *con, int trigger_type)
 	if (con->trigger.action == PLAY_SOUND) {
 		playsoundfile(param_string);
 	} else if (con->trigger.action == EXECUTE) {
-		system(param_string);
+		(void)system(param_string);
 	} else if (con->trigger.action == DIALOG) {
 		quick_message(con->nick, con->trigger.type != USER_OFFLINE,
 			param_string);

@@ -122,7 +122,7 @@ void open_url(void *w, char *url)
 		strncat(command, " &", 1280 - strlen(command));
 	}
 	eb_debug(DBG_CORE, "launching %s\n", command);
-	system(command);
+	(void)system(command);
 
 	if (free_browser && browser)
 		g_free(browser);

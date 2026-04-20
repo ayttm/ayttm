@@ -692,7 +692,7 @@ static void change_local_account_on_click(GtkWidget *button, gpointer userdata)
 static GtkWidget *get_local_accounts(Conversation *cw)
 {
 	GtkWidget *submenu, *label, *button;
-	char *handle = NULL, buff[256];
+	char *handle = NULL, buff[2048];
 	eb_local_account *first_act = NULL, *subsequent_act = NULL;
 	chat_window_account *cwa = NULL;
 
@@ -748,10 +748,11 @@ static gboolean handle_focus(GtkWidget *widget, GdkEventFocus *event,
 	chat_window_list = g_list_remove(chat_window_list, cw);
 	chat_window_list = g_list_prepend(chat_window_list, cw);
 
-	if (cw->notebook)
+	if (cw->notebook) {
 		chatpane = gtk_notebook_get_nth_page(GTK_NOTEBOOK(cw->notebook),
 			gtk_notebook_get_current_page(GTK_NOTEBOOK(cw->notebook)));
 		cw = g_object_get_data(G_OBJECT(chatpane), "cw_object");
+	}
 
 	if (cw)
 		gtk_widget_grab_focus(cw->entry);
@@ -973,7 +974,6 @@ static void chat_history_up(chat_window *cw)
 	GtkTextBuffer *buffer =
 		gtk_text_view_get_buffer(GTK_TEXT_VIEW(cw->entry));
 	GtkTextIter start, end;
-	int p = 0;
 
 	gtk_text_buffer_get_bounds(buffer, &start, &end);
 
@@ -996,7 +996,7 @@ static void chat_history_up(chat_window *cw)
 		cw->conv->hist_pos = cw->conv->hist_pos->prev;
 
 	gtk_text_buffer_delete(buffer, &start, &end);
-	p = cw_set_message(cw, cw->conv->hist_pos->data);
+	cw_set_message(cw, cw->conv->hist_pos->data);
 }
 
 static void chat_history_down(chat_window *cw)
@@ -1004,7 +1004,6 @@ static void chat_history_down(chat_window *cw)
 	GtkTextBuffer *buffer =
 		gtk_text_view_get_buffer(GTK_TEXT_VIEW(cw->entry));
 	GtkTextIter start, end;
-	int p = 0;
 
 	gtk_text_buffer_get_bounds(buffer, &start, &end);
 
@@ -1016,7 +1015,7 @@ static void chat_history_down(chat_window *cw)
 	gtk_text_buffer_delete(buffer, &start, &end);
 
 	if (cw->conv->hist_pos)
-		p = cw_set_message(cw, cw->conv->hist_pos->data);
+		cw_set_message(cw, cw->conv->hist_pos->data);
 }
 
 /* TODO: Review this */
@@ -1883,8 +1882,8 @@ chat_window *ay_chat_window_new(Conversation *conv)
 	}
 
 	/* This is the invite button */
-	if (cw->conv->is_room || conv->local_user &&
-	    can_conference(GET_SERVICE(conv->local_user))) {
+	if (cw->conv->is_room || (conv->local_user &&
+	    can_conference(GET_SERVICE(conv->local_user)))) {
 		ICON_CREATE_XPM(icon, iconwid, invite_btn_xpm);
 		TOOLBAR_APPEND(invite_button, _("Invite (CTRL+I)"), iconwid,
 			       do_invite_window, cw);
@@ -2114,16 +2113,14 @@ static void update_public_sensitivity(GtkWidget *widget, gpointer data)
 	char *service =
 		gtk_combo_box_get_active_text(GTK_COMBO_BOX(chat_room_type));
 	char *mservice = NULL;
-	char *local_acc = NULL;
 	int service_id = -1;
 	int has_public = 0;
 
-	if (!service && (!strstr(service, "]") || !strstr(service, " "))) {
+	if (!service || !strstr(service, "]") || !strstr(service, " ")) {
 		g_free(service);
 		return;
 	}
 
-	local_acc = strstr(service, " ") + 1;
 	*(strstr(service, "]")) = '\0';
 	mservice = strstr(service, "[") + 1;
 

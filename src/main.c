@@ -217,8 +217,6 @@ int main(int argc, char *argv[])
 		G_DIR_SEPARATOR, G_DIR_SEPARATOR);
 #endif
 
-	g_thread_init(NULL);
-
 #if defined ( HAVE_GETOPT ) || defined ( HAVE_GETOPT_LONG )
 	while (1) {
 #ifdef HAVE_GETOPT_LONG
@@ -307,7 +305,7 @@ int main(int argc, char *argv[])
 #else
 			if (config_dir[strlen(config_dir) - 1] !=
 				G_DIR_SEPARATOR)
-				g_strlcat(config_dir, (char *)G_DIR_SEPARATOR, sizeof(config_dir));
+				g_strlcat(config_dir, G_DIR_SEPARATOR_S, sizeof(config_dir));
 #endif
 			if (stat(config_dir, &stat_buf) == -1) {
 				perror(config_dir);
@@ -363,20 +361,20 @@ int main(int argc, char *argv[])
 		}
 		if (strlen(url) > 0) {
 			length = strlen("URL-ayttm") + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, "URL-ayttm", length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, "URL-ayttm", length);
 			length = strlen(url) + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, url, length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, url, length);
 		} else {
 			length = strlen(contact) + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, contact, length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, contact, length);
 			length = strlen(message) + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, message, length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, message, length);
 		}
-		read(sock, &ret, sizeof(int));
+		(void)read(sock, &ret, sizeof(int));
 		close(sock);
 		exit(ret);
 	}
@@ -419,9 +417,9 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 		length = strlen("focus-ayttm") + 1;
-		write(sock, &length, sizeof(short));
-		write(sock, "focus-ayttm", length);
-		read(sock, &ret, sizeof(int));
+		(void)write(sock, &length, sizeof(short));
+		(void)write(sock, "focus-ayttm", length);
+		(void)read(sock, &ret, sizeof(int));
 		close(sock);
 		exit(ret);
 	}

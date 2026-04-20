@@ -53,6 +53,12 @@ typedef struct {
 	GtkTextMark end;	/* And a marker indicating its end in the buffer */
 } tag;
 
+static void tag_free(tag *t)
+{
+	g_free(t->name);
+	g_free(t);
+}
+
 /* 
  * Our own strcasestr since we don't have a standard strcasestr. The strcasestr is a
  * non-standard extension of strstr. Somebody tell me if a standard extension comes up.
@@ -517,24 +523,23 @@ gboolean search_char(GtkTextIter *result_iter, gchar needle)
 void unescape_html(GtkTextBuffer *buffer, GtkTextMark html_start)
 {
 	GtkTextIter start, end;
-	GtkTextMark *start_mark = NULL, *end_mark = NULL;
-	int html_found = 0;
+	GtkTextMark *start_mark = NULL;
 
 	gtk_text_buffer_get_iter_at_mark(buffer, &start, &html_start);
 	gtk_text_buffer_get_iter_at_mark(buffer, &end, &html_start);
+
+	start_mark = gtk_text_buffer_create_mark(buffer, NULL, &start, TRUE);
 
 	while (search_char(&start, '&') &&
 		search_char(&end, ';') &&
 		gtk_text_iter_compare(&start, &end) < 0) {
 		gchar *code;
+		int html_found = 0;
 
 		gtk_text_iter_forward_char(&end);
 
 		code = gtk_text_buffer_get_slice(buffer, &start, &end, TRUE);
-		start_mark =
-			gtk_text_buffer_create_mark(buffer, NULL, &start, TRUE);
-		end_mark =
-			gtk_text_buffer_create_mark(buffer, NULL, &end, TRUE);
+		gtk_text_buffer_move_mark(buffer, start_mark, &start);
 
 		if (!g_ascii_strncasecmp(code, "&gt;", 4)) {
 			gtk_text_buffer_delete(buffer, &start, &end);
@@ -589,6 +594,8 @@ void unescape_html(GtkTextBuffer *buffer, GtkTextMark html_start)
 
 		gtk_text_iter_forward_char(&start);
 	}
+
+	gtk_text_buffer_delete_mark(buffer, start_mark);
 }
 
 /*
@@ -693,7 +700,7 @@ void parse_html(GtkTextView *text_view, GtkTextMark html_start, int ignore)
 			cur = g_new0(tag, 1);
 
 			g_snprintf(cur->id, sizeof(cur->id), "%d%d", messageid, tagid++);
-			cur->name = strdup(tag_string);
+			cur->name = g_strdup(tag_string);
 			cur->start = *tag_start_mark;
 
 			/* 
@@ -710,7 +717,7 @@ void parse_html(GtkTextView *text_view, GtkTextMark html_start, int ignore)
 				tag_list = g_list_append(tag_list, cur);
 			} else {
 				apply_tag(text_view, *cur, ignore);
-				g_free(cur);
+				tag_free(cur);
 			}
 
 		}
@@ -732,6 +739,7 @@ void parse_html(GtkTextView *text_view, GtkTextMark html_start, int ignore)
 		last_tag->end = *end_mark;
 		apply_tag(text_view, *last_tag, ignore);
 		tag_list = g_list_remove(tag_list, last_tag);
+		tag_free(last_tag);
 	}
 
 	g_list_free(tag_list);

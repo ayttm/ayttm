@@ -30,11 +30,11 @@
 #ifndef __PROXY_PRIVATE_H__
 #define __PROXY_PRIVATE_H__
 
-extern AyProxyData *default_proxy;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+	extern AyProxyData *default_proxy;
 
 	int socks4_connect(int sock, const char *host, int port,
 		AyProxyData *proxy);

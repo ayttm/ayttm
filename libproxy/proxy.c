@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #ifdef __MINGW32__
 #include <winsock2.h>
@@ -61,6 +62,44 @@
 
 /* Prototypes */
 static char *encode_proxy_auth_str(AyProxyData *proxy);
+
+static ssize_t write_all(int fd, const void *buf, size_t len)
+{
+	const char *p = (const char *)buf;
+	size_t remaining = len;
+	while (remaining > 0) {
+		ssize_t n = write(fd, p, remaining);
+		if (n < 0) {
+			if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
+				continue;
+			return -1;
+		}
+		if (n == 0)
+			return -1;
+		p += n;
+		remaining -= (size_t)n;
+	}
+	return (ssize_t)len;
+}
+
+static ssize_t read_all(int fd, void *buf, size_t len)
+{
+	char *p = (char *)buf;
+	size_t remaining = len;
+	while (remaining > 0) {
+		ssize_t n = read(fd, p, remaining);
+		if (n < 0) {
+			if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
+				continue;
+			return -1;
+		}
+		if (n == 0)
+			return -1;  /* EOF before expected length */
+		p += n;
+		remaining -= (size_t)n;
+	}
+	return (ssize_t)len;
+}
 
 AyProxyData *default_proxy = NULL;
 
@@ -156,7 +195,7 @@ int socks4_connect(int sock, const char *host, int port, AyProxyData *proxy)
 	packet[packetlen - 1] = 0;	/* END          */
 	debug_print("Sending \"%s\"\n", packet);
 	if (write(sock, packet, packetlen) == packetlen) {
-		bzero(packet, sizeof(packet));
+		memset(packet, 0, packetlen);
 		/* Check response - return as SOCKS4 if its valid */
 		if (read(sock, packet, 9) >= 4) {
 			if (packet[1] == 90) {
@@ -169,10 +208,9 @@ int socks4_connect(int sock, const char *host, int port, AyProxyData *proxy)
 				retval = AY_SOCKS4_IDENT_USER_DIFF;
 			else {
 				retval = AY_SOCKS4_INCOMPATIBLE_ERROR;
-				printf("=>>%d\n", packet[1]);
 			}
 		} else {
-			printf("short read %s\n", packet);
+			fprintf(stderr, "SOCKS4: short read\n");
 		}
 	}
 	close(sock);
@@ -192,7 +230,6 @@ int socks5_connect(int sockfd, const char *host, int port, AyProxyData *proxy)
 {
 	int i;
 	char buff[530];
-	int need_auth = 0;
 	struct addrinfo *result = NULL;
 	int j;
 
@@ -201,51 +238,57 @@ int socks5_connect(int sockfd, const char *host, int port, AyProxyData *proxy)
 		buff[1] = 0x02;	/* we support (no authentication & username/pass) */
 		buff[2] = 0x00;	/* we support the method type "no authentication" */
 		buff[3] = 0x02;	/* we support the method type "username/passw" */
-		need_auth = 1;
 	} else {
 		buff[1] = 0x01;	/* we support (no authentication) */
 		buff[2] = 0x00;	/* we support the method type "no authentication" */
 	}
 
-	write(sockfd, buff, 3 + ((proxy->username
-				&& proxy->username[0]) ? 1 : 0));
+	if (write_all(sockfd, buff, 3 + ((proxy->username
+				&& proxy->username[0]) ? 1 : 0)) < 0) {
+		close(sockfd);
+		return AY_SOCKS5_CONNECT_FAIL;
+	}
 
-	if (read(sockfd, buff, 2) < 0) {
+	if (read_all(sockfd, buff, 2) != 2) {
 		close(sockfd);
 		return AY_SOCKS5_CONNECT_FAIL;
 	}
 	if (buff[1] == 0x00)
-		need_auth = 0;
+		;	/* no auth needed */
 	else if (buff[1] == 0x02 && proxy->username && proxy->username[0])
-		need_auth = 1;
+		;	/* username/password auth */
 	else {
-		fprintf(stderr, "No Acceptable Methods");
+		fprintf(stderr, "No Acceptable Methods\n");
+		close(sockfd);
 		return AY_SOCKS5_CONNECT_FAIL;
 	}
-	if (((proxy->username && proxy->username[0]) ? 1 : 0)) {
+	if (buff[1] == 0x02 && proxy->username && proxy->username[0]) {
+		size_t ulen = strlen(proxy->username);
+		size_t plen = proxy->password ? strlen(proxy->password) : 0;
+		if (ulen > 255) ulen = 255;
+		if (plen > 255) plen = 255;
+
 		/* subneg start */
 		buff[0] = 0x01;	/* subneg version  */
-		printf("[%d]", buff[0]);
-		buff[1] = strlen(proxy->username);	/* username length */
-		printf("[%d]", buff[1]);
-		for (i = 0; proxy->username[i] && i < 255; i++) {
-			buff[i + 2] = proxy->username[i];	/* AUTH         */
-			printf("%c", buff[i + 2]);
+		buff[1] = (unsigned char)ulen;	/* username length */
+		for (i = 0; i < ulen; i++) {
+			buff[i + 2] = proxy->username[i];
 		}
 		i += 2;
-		buff[i] = strlen(proxy->password);
-		printf("[%d]", buff[i]);
+		buff[i] = (unsigned char)plen;	/* password length */
 		i++;
-		for (j = 0; j < proxy->password[j] && j < 255; j++) {
-			buff[i + j] = proxy->password[j];	/* AUTH         */
-			printf("%c", buff[i + j]);
+		for (j = 0; j < plen; j++) {
+			buff[i + j] = proxy->password[j];
 		}
 		i += (j);
 		buff[i] = 0;
 
-		write(sockfd, buff, i);
+		if (write_all(sockfd, buff, i) < 0) {
+			close(sockfd);
+			return AY_SOCKS5_CONNECT_FAIL;
+		}
 
-		if (read(sockfd, buff, 2) < 0) {
+		if (read_all(sockfd, buff, 2) != 2) {
 			close(sockfd);
 			return AY_SOCKS5_CONNECT_FAIL;
 		}
@@ -269,20 +312,18 @@ int socks5_connect(int sockfd, const char *host, int port, AyProxyData *proxy)
 
 	freeaddrinfo(result);
 
-	write(sockfd, buff, 10);
+	if (write_all(sockfd, buff, 10) < 0) {
+		close(sockfd);
+		return AY_SOCKS5_CONNECT_FAIL;
+	}
 
-	if (read(sockfd, buff, 10) < 0) {
+	if (read_all(sockfd, buff, 10) != 10) {
 		close(sockfd);
 		return AY_SOCKS5_CONNECT_FAIL;
 	}
 
 	if (buff[1] != 0x00) {
-		for (i = 0; i < 8; i++)
-			printf("%03d ", buff[i]);
-
-		printf("%d", ntohs(*(unsigned short *)&buff[8]));
-		printf("\n");
-		fprintf(stderr, "SOCKS error number %d\n", buff[1]);
+		fprintf(stderr, "SOCKS5 error: code %d\n", buff[1]);
 		close(sockfd);
 		return AY_CONNECTION_REFUSED;
 	}

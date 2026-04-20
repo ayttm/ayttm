@@ -1461,18 +1461,14 @@ void contact_update_status(struct contact *ec)
 	if (!iGetLocalPref("do_noautoresize")) {
 		int width = contact_list->allocation.width;
 		int width2, height2;
-		int width3, height3;
+		int width3;
 
 		if (GTK_WIDGET_VISIBLE(GTK_SCROLLED_WINDOW(contact_window)->
 				vscrollbar)) {
 			width3 = GTK_SCROLLED_WINDOW(contact_window)->
 				vscrollbar->allocation.width;
-			height3 =
-				GTK_SCROLLED_WINDOW(contact_window)->
-				vscrollbar->allocation.height;
 		} else {
 			width3 = 0;
-			height3 = 0;
 		}
 		width2 = contact_window->allocation.width;
 		height2 = contact_window->allocation.height;
@@ -2006,13 +2002,11 @@ static GtkWidget *MakeStatusMenu(eb_local_account *ela)
 	GList *status_label;
 	GList *temp_list;
 	GtkWidget *hbox, *label;
-	GtkStyle *style;
 	GSList *group = NULL;
 	GList *widgets = NULL;
 	int x;
 	gchar string[255];
 	status_menu = gtk_menu_new();
-	style = gtk_widget_get_style(status_menu);
 
 	assert(ela);
 	gtk_widget_realize(status_menu);
@@ -2527,7 +2521,6 @@ void show_status_window()
 {
 	int win_x, win_y;
 	unsigned int win_w, win_h;
-	int flags;
 
 	/* iSetLocalPref("show_contact_window", 1); */
 	/* There is no such preference, but should be */
@@ -2535,7 +2528,7 @@ void show_status_window()
 	/* handle geometry - ivey */
 #ifndef __MINGW32__
 	if (geometry[0] != 0) {
-		flags = XParseGeometry(geometry, &win_x, &win_y, &win_w,
+		(void)XParseGeometry(geometry, &win_x, &win_y, &win_w,
 			&win_h);
 		gtk_window_set_position(GTK_WINDOW(statuswindow),
 			GTK_WIN_POS_NONE);
