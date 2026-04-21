@@ -71,7 +71,7 @@ void *eb_add_menu_item(char *label, char *menu_name, eb_menu_callback callback,
 {
 	menu_item_data *mid = NULL;
 	menu_data *md = NULL;
-	LList *list;
+	GList *list;
 
 	eb_debug(DBG_CORE, ">Adding %s to menu %s\n", label, menu_name);
 	md = GetPref(menu_name);
@@ -93,18 +93,18 @@ void *eb_add_menu_item(char *label, char *menu_name, eb_menu_callback callback,
 			return ((void *)tmid);
 		}
 	}
-	mid = calloc(1, sizeof(menu_item_data));
+	mid = g_new0(menu_item_data, 1);
 	mid->user_data = data;
 	mid->label = label;
 	mid->callback = callback;
 	mid->protocol = NULL;
-	md->menu_items = l_list_append(md->menu_items, mid);
+	md->menu_items = g_list_append(md->menu_items, mid);
 	if (md->redraw_menu) {
 		eb_debug(DBG_CORE, "Calling redraw_menu for %s\n", menu_name);
 		md->redraw_menu();
 	}
 	eb_debug(DBG_CORE, "<Successfully added menu item\n");
-	/* Return the menu_item_data pointer, so that l_list_remove can be used */
+	/* Return the menu_item_data pointer, so that g_list_remove can be used */
 	return ((void *)mid);
 }
 
@@ -161,7 +161,7 @@ int eb_remove_menu_item(char *menu_name, void *tag)
 			menu_name);
 		return (-1);
 	}
-	md->menu_items = l_list_remove(md->menu_items, tag);
+	md->menu_items = g_list_remove(md->menu_items, tag);
 	if (md->redraw_menu) {
 		eb_debug(DBG_CORE, "Calling redraw_menu\n");
 		md->redraw_menu();
@@ -170,10 +170,10 @@ int eb_remove_menu_item(char *menu_name, void *tag)
 	return (0);
 }
 
-void eb_set_active_menu_status(LList *status_menu, int status)
+void eb_set_active_menu_status(GList *status_menu, int status)
 {
 	gtk_check_menu_item_set_active
-		(GTK_CHECK_MENU_ITEM(l_list_nth(status_menu, status)->data),
+		(GTK_CHECK_MENU_ITEM(g_list_nth(status_menu, status)->data),
 		TRUE);
 
 	set_menu_sensitivity();
@@ -251,9 +251,9 @@ void eb_timeout_remove(int tag)
 
 /* Debugging */
 #ifdef __STDC__
-int EB_DEBUG(const char *func, char *file, int line, const char *fmt, ...)
+int EB_DEBUG(const char *func, const char *file, int line, const char *fmt, ...)
 #else
-int EB_DEBUG(const char *func, char *file, int line, const char *fmt, va_alist)
+int EB_DEBUG(const char *func, const char *file, int line, const char *fmt, va_alist)
 char *fmt;
 va_dcl
 #endif

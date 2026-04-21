@@ -25,7 +25,8 @@
 #ifndef __DIALOG__
 #define __DIALOG__
 
-#include "llist.h"
+#include <glib.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,7 +41,7 @@ extern "C" {
 			void *data), void *data);
 
 	void do_llist_dialog(const char *message, const char *title,
-		const LList *list, void (*action) (const char *text,
+		const GList *list, void (*action) (const char *text,
 			void *data), void *data);
 
 	void do_text_input_window(const char *title, const char *value,

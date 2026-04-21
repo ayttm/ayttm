@@ -209,13 +209,13 @@ static void edit_group_callback(GtkWidget *w, grouplist *g)
 
 static void sort_group_callback(GtkWidget *w, grouplist *g)
 {
-	LList *l = g->members;
-	LList *sorted = NULL;
+	GList *l = g->members;
+	GList *sorted = NULL;
 
 	while (l) {
-		sorted = l_list_insert_sorted(sorted, l->data,
-			(LListCompFunc) contact_cmp);
-		l = l_list_remove_link(l, l);
+		sorted = g_list_insert_sorted(sorted, l->data,
+			(GCompareFunc) contact_cmp);
+		l = g_list_remove_link(l, l);
 	}
 
 	g->members = sorted;
@@ -498,7 +498,7 @@ static void status_show_callback(GtkWidget *w, gpointer data)
 
 static GtkWidget *make_info_menu(struct contact *c, int *nb)
 {
-	LList *iterator;
+	GList *iterator;
 	GtkWidget *InfoMenu = gtk_menu_new();
 	GtkWidget *button;
 	char *buff;
@@ -558,7 +558,7 @@ int add_menu_items(void *vmenu, int cur_service, int should_sep,
 	menu_data *md = NULL;
 	menu_item_data *mid = NULL;
 	ebmContactData *ecd = NULL;
-	LList *list = NULL;
+	GList *list = NULL;
 	int next_sep = 0;
 	int last = -2;
 	eb_local_account *l_ela = ela;
@@ -879,7 +879,7 @@ static void ay_check_release(GtkWidget *widget, gpointer userdata)
 	if (version) {
 		eb_debug(DBG_CORE, "Last version: %s\n", version);
 		ay_compare_version(version, !is_auto);
-		free(version);
+		g_free(version);
 	}
 }
 
@@ -913,7 +913,7 @@ static void eb_status(GtkCheckMenuItem *widget, gpointer stats)
 	if (current_state != s->status) {
 		char buff[1024];
 		char *sname = NULL;
-		LList *l = eb_services[s->ela->service_id].sc->get_states();
+		GList *l = eb_services[s->ela->service_id].sc->get_states();
 		int i;
 
 		for (i = 0; i <= s->status; i++) {
@@ -960,7 +960,7 @@ static void eb_status(GtkCheckMenuItem *widget, gpointer stats)
 
 static void eb_sign_on_predef(int all)
 {
-	LList *node = accounts;
+	GList *node = accounts;
 	while (node) {
 		eb_local_account *ac = (eb_local_account *)(node->data);
 		if (!ac->connected && (all || ac->connect_at_startup)) {
@@ -991,7 +991,7 @@ void eb_sign_on_startup()
 
 void eb_sign_off_all()
 {
-	LList *node = accounts;
+	GList *node = accounts;
 	while (node) {
 		eb_local_account *ac = (eb_local_account *)(node->data);
 		if (ac && ac->connected) {
@@ -1015,7 +1015,7 @@ void eb_sign_off_all()
 
 void reset_list(void)
 {
-	LList *grps;
+	GList *grps;
 	for (grps = groups; grps; grps = grps->next)
 		remove_group_line(grps->data);
 }
@@ -1055,9 +1055,9 @@ void buddy_update_icon(eb_account *ea)
 /* General purpose update Contact List */
 void update_contact_list()
 {
-	LList *grps;
-	LList *contacts;
-	LList *accounts;
+	GList *grps;
+	GList *contacts;
+	GList *accounts;
 
 	grouplist *grp;
 	struct contact *con;
@@ -1139,7 +1139,7 @@ void update_contact_list()
    it from the buddy list. */
 void add_contact_and_accounts(struct contact *c)
 {
-	LList *l;
+	GList *l;
 	for (l = c->accounts; l; l = l->next) {
 		eb_account *ea = l->data;
 		if (status_show == 0 || status_show == 1 || ea->online) {
@@ -1226,7 +1226,7 @@ void add_account_line(eb_account *ea)
 void add_contact_line(struct contact *ec)
 {
 	GtkTreeIter *sibling = NULL;
-	LList *c_iter;
+	GList *c_iter;
 	GtkTreeIter iter;
 
 	if (ec->list_item)
@@ -1241,7 +1241,7 @@ void add_contact_line(struct contact *ec)
 
 	ec->icon_handler = -1;
 
-	for (c_iter = ec->group->members; c_iter; c_iter = l_list_next(c_iter)) {
+	for (c_iter = ec->group->members; c_iter; c_iter = g_list_next(c_iter)) {
 		struct contact *c = c_iter->data;
 		if (strcasecmp(ec->nick, c->nick) < 0 && c->list_item) {
 			sibling = c->list_item;
@@ -1294,7 +1294,7 @@ void update_contact_line(struct contact *ec)
 /* hides a group on the buddy list */
 void remove_group_line(grouplist *eg)
 {
-	LList *contacts;
+	GList *contacts;
 
 	if (!eg->list_item)
 		return;
@@ -1313,7 +1313,7 @@ void remove_group_line(grouplist *eg)
    process */
 void remove_contact_line(struct contact *ec)
 {
-	LList *accounts;
+	GList *accounts;
 
 	if (!ec->list_item)
 		return;
@@ -1356,7 +1356,7 @@ void remove_account_line(eb_account *ea)
   (removes the logoff icon and hides the contact if necessary) */
 static gint hide_contact(struct contact *ec)
 {
-	LList *l;
+	GList *l;
 
 	if (ec->icon_handler == -1)
 		return FALSE;
@@ -1411,7 +1411,7 @@ static gint hide_account(eb_account *ea)
 void contact_update_status(struct contact *ec)
 {
 	eb_account *ea = NULL;
-	LList *l;
+	GList *l;
 
 	/* find the account who's status information should be reflected in
 	   the contact line (preferably the default protocol account, but
@@ -1461,18 +1461,14 @@ void contact_update_status(struct contact *ec)
 	if (!iGetLocalPref("do_noautoresize")) {
 		int width = contact_list->allocation.width;
 		int width2, height2;
-		int width3, height3;
+		int width3;
 
 		if (GTK_WIDGET_VISIBLE(GTK_SCROLLED_WINDOW(contact_window)->
 				vscrollbar)) {
 			width3 = GTK_SCROLLED_WINDOW(contact_window)->
 				vscrollbar->allocation.width;
-			height3 =
-				GTK_SCROLLED_WINDOW(contact_window)->
-				vscrollbar->allocation.height;
 		} else {
 			width3 = 0;
-			height3 = 0;
 		}
 		width2 = contact_window->allocation.width;
 		height2 = contact_window->allocation.height;
@@ -1538,7 +1534,7 @@ void buddy_update_status(eb_account *ea)
 	update_status_message(msgbuff);
 
 	g_free(ea->status);
-	ea->status = strdup(c);
+	ea->status = g_strdup(c);
 
 	time(&last_status_change);
 	mytime = localtime(&last_status_change);
@@ -1918,7 +1914,7 @@ static gboolean drag_drop_callback(GtkWidget *widget, GdkDragContext *c,
 /* Generates the contact list tree(should only be called once) */
 static GtkWidget *MakeContactList()
 {
-	LList *l1;
+	GList *l1;
 	GtkCellRenderer *renderer;
 	GtkTreeViewColumn *column;
 
@@ -2003,16 +1999,14 @@ static GtkWidget *MakeStatusMenu(eb_local_account *ela)
 {
 	GtkWidget *status_menu_item;
 	GtkWidget *status_menu;
-	LList *status_label;
-	LList *temp_list;
+	GList *status_label;
+	GList *temp_list;
 	GtkWidget *hbox, *label;
-	GtkStyle *style;
 	GSList *group = NULL;
-	LList *widgets = NULL;
+	GList *widgets = NULL;
 	int x;
 	gchar string[255];
 	status_menu = gtk_menu_new();
-	style = gtk_widget_get_style(status_menu);
 
 	assert(ela);
 	gtk_widget_realize(status_menu);
@@ -2032,7 +2026,7 @@ static GtkWidget *MakeStatusMenu(eb_local_account *ela)
 		status_menu_item = gtk_radio_menu_item_new(group);
 		group = gtk_radio_menu_item_get_group(GTK_RADIO_MENU_ITEM
 			(status_menu_item));
-		widgets = l_list_append(widgets, status_menu_item);
+		widgets = g_list_append(widgets, status_menu_item);
 		hbox = gtk_hbox_new(FALSE, 3);
 		label = gtk_label_new((gchar *)temp_list->data);
 
@@ -2060,17 +2054,17 @@ static GtkWidget *MakeStatusMenu(eb_local_account *ela)
 		return ela->status_button;
 
 	/* First deactivate zeroth status radio item */
-	GTK_CHECK_MENU_ITEM(l_list_nth(widgets, 0)->data)->active = 0;
+	GTK_CHECK_MENU_ITEM(g_list_nth(widgets, 0)->data)->active = 0;
 
 	/* Now, activate the desired status radio item */
 	temp_list =
-		l_list_nth(widgets,
+		g_list_nth(widgets,
 		eb_services[ela->service_id].sc->get_current_state(ela));
 	GTK_CHECK_MENU_ITEM(temp_list->data)->active = 1;
 
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(ela->status_button),
 		status_menu);
-	l_list_free(status_label);
+	g_list_free(status_label);
 
 	return ela->status_button;
 }
@@ -2110,7 +2104,7 @@ void eb_profile_window(void *v_profile_submenuitem)
 {
 	GtkWidget *profile_submenuitem = v_profile_submenuitem;
 	GtkWidget *label;
-	LList *list = NULL;
+	GList *list = NULL;
 	GtkWidget *profile_menu = gtk_menu_new();
 	menu_data *md = NULL;
 	menu_item_data *mid = NULL;
@@ -2145,7 +2139,7 @@ void eb_smiley_window(void *v_smiley_submenuitem)
 	GtkWidget *smiley_submenuitem = v_smiley_submenuitem;
 	GtkWidget *label;
 	GSList *group = NULL;
-	LList *list = NULL;
+	GList *list = NULL;
 	GtkWidget *smiley_menu = gtk_menu_new();
 	menu_data *md = NULL;
 
@@ -2159,8 +2153,8 @@ void eb_smiley_window(void *v_smiley_submenuitem)
 			menu_item_data *mid;
 			GtkWidget *label;
 		} *items =
-			malloc(sizeof(struct _menu_items) *
-			l_list_length(md->menu_items));
+			g_malloc(sizeof(struct _menu_items) *
+			g_list_length(md->menu_items));
 		int i;
 
 		for (i = 0, list = md->menu_items; list; i++, list = list->next) {
@@ -2187,7 +2181,7 @@ void eb_smiley_window(void *v_smiley_submenuitem)
 		for (--i; i >= 0; i--)
 			g_signal_connect(items[i].label, "activate",
 				G_CALLBACK(eb_smiley_function), items[i].mid);
-		free(items);
+		g_free(items);
 	}
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(smiley_submenuitem),
 		smiley_menu);
@@ -2199,7 +2193,7 @@ void eb_import_window(void *v_import_submenuitem)
 {
 	GtkWidget *import_submenuitem = v_import_submenuitem;
 	GtkWidget *label;
-	LList *list = NULL;
+	GList *list = NULL;
 	GtkWidget *import_menu = gtk_menu_new();
 	menu_data *md = NULL;
 	menu_item_data *mid = NULL;
@@ -2232,7 +2226,7 @@ void eb_set_status_window(void *v_set_status_submenuitem)
 	GtkWidget *set_status_submenuitem = v_set_status_submenuitem;
 	GtkWidget *label;
 	GtkWidget *account_menu = gtk_menu_new();
-	LList *list;
+	GList *list;
 
 	label = gtk_tearoff_menu_item_new();
 	gtk_menu_shell_append(GTK_MENU_SHELL(account_menu), label);
@@ -2383,14 +2377,14 @@ void set_menu_sensitivity(void)
 	int online = connected_local_accounts();
 
 	menu_set_sensitive(ui_manager, "ui/menubar/Chat/Set status",
-		l_list_length(accounts));
+		g_list_length(accounts));
 	menu_set_sensitive(ui_manager, "ui/menubar/Chat/GrpChat", online);
 	menu_set_sensitive(ui_manager, "ui/menubar/Chat/SetAway", online);
 	menu_set_sensitive(ui_manager, "ui/menubar/Chat/SignoffAll", online);
 	menu_set_sensitive(ui_manager, "ui/menubar/Chat/SignonAll",
-		(online != l_list_length(accounts)));
+		(online != g_list_length(accounts)));
 
-	set_tray_menu_sensitive(online, l_list_length(accounts));
+	set_tray_menu_sensitive(online, g_list_length(accounts));
 }
 
 static gchar *menu_translate(const gchar *path, gpointer data)
@@ -2527,7 +2521,6 @@ void show_status_window()
 {
 	int win_x, win_y;
 	unsigned int win_w, win_h;
-	int flags;
 
 	/* iSetLocalPref("show_contact_window", 1); */
 	/* There is no such preference, but should be */
@@ -2535,7 +2528,7 @@ void show_status_window()
 	/* handle geometry - ivey */
 #ifndef __MINGW32__
 	if (geometry[0] != 0) {
-		flags = XParseGeometry(geometry, &win_x, &win_y, &win_w,
+		(void)XParseGeometry(geometry, &win_x, &win_y, &win_w,
 			&win_h);
 		gtk_window_set_position(GTK_WINDOW(statuswindow),
 			GTK_WIN_POS_NONE);
@@ -2639,7 +2632,7 @@ void eb_status_window()
 	gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
 	gtk_widget_show(hbox);
 
-	eb_debug(DBG_CORE, "%d\n", l_list_length(accounts));
+	eb_debug(DBG_CORE, "%d\n", g_list_length(accounts));
 	MakeContactList();
 	gtk_widget_show(contact_window);
 	gtk_box_pack_start(GTK_BOX(vbox), contact_window, TRUE, TRUE, 0);

@@ -58,7 +58,7 @@ typedef struct _ptr_list {
 	void *value;
 } ptr_list;
 
-static LList *s_global_prefs = NULL;
+static GList *s_global_prefs = NULL;
 
 void ayttm_prefs_read_file(char *file);
 
@@ -72,12 +72,12 @@ static int s_compare_ptr_key(const void *a, const void *b)
 
 static void s_add_pref(const char *key, void *data)
 {
-	ptr_list *pref_data = calloc(1, sizeof(ptr_list));
+	ptr_list *pref_data = g_new0(ptr_list, 1);
 
-	strcpy(pref_data->key, key);
+	g_strlcpy(pref_data->key, key, sizeof(pref_data->key));
 	pref_data->value = (void *)data;
 
-	s_global_prefs = l_list_append(s_global_prefs, pref_data);
+	s_global_prefs = g_list_append(s_global_prefs, pref_data);
 }
 
 static char *s_strip_whitespace(char *inStr)
@@ -112,197 +112,11 @@ static char *s_strip_whitespace(char *inStr)
 	return (inStr);
 }
 
-static char *s_strdup_allow_null(const char *inStr)
-{
-	if (inStr == NULL)
-		return (NULL);
 
-	return (strdup(inStr));
-}
-
-static char *s_strdup_pref(const char *inStr)
-{
-	char *returnStr = NULL;
-
-	returnStr = calloc(1, MAX_PREF_LEN);
-
-	if (inStr == NULL)
-		returnStr[0] = '\0';
-	else
-		strncpy(returnStr, inStr, MAX_PREF_LEN);
-
-	return (returnStr);
-}
-
-/** A quick hack to strip stuff from the beginning and end of a string.
-
-	@param	inFromBeginning	text to strip from beginning
-	@param	inFromEnd		text to strip from the end
-	@param	inStr			the string we're stripping from
-	
-	@return	newly allocated stripped string [caller responsible for freeing mem]
-*/
-static char *s_strdup_strip(const char *inFromBeginning, const char *inFromEnd,
-	const char *inStr)
-{
-	char *returnStr = NULL;
-	const char *startPtr = inStr;
-	const char *endPtr = NULL;
-	int totalLen = 0;
-
-	if (inStr == NULL)
-		return (NULL);
-
-	endPtr = inStr + strlen(inStr);
-
-	if (inFromBeginning != NULL) {
-		const int beginLen = strlen(inFromBeginning);
-
-		if (!strncmp(inFromBeginning, inStr, beginLen))
-			startPtr = inStr + beginLen;
-	}
-
-	if (inFromEnd != NULL) {
-		const int endLen = strlen(inFromEnd);
-
-		if (!strncmp(inFromEnd, endPtr - endLen, endLen))
-			endPtr = endPtr - endLen;
-	}
-
-	totalLen = endPtr - startPtr;
-	assert(totalLen > 0);
-
-	returnStr = calloc(1, totalLen + 1);
-	memcpy(returnStr, startPtr, totalLen);
-	returnStr[totalLen] = '\0';
-
-	return (returnStr);
-}
-
-static input_list *s_copy_input_list(input_list *inList)
-{
-	input_list *new_list = NULL;
-	input_list *list = inList;
-	input_list *prev = NULL;
-
-	while (list != NULL) {
-		input_list *new_item = calloc(1, sizeof(input_list));
-
-		new_item->type = list->type;
-		new_item->next = NULL;
-
-		switch (list->type) {
-		case EB_INPUT_CHECKBOX:
-			{
-				new_item->name =
-					s_strdup_allow_null(list->name);
-				new_item->label =
-					s_strdup_allow_null(list->label);
-				new_item->widget.checkbox.value =
-					calloc(1, sizeof(int));
-
-				if (list->widget.checkbox.value != NULL)
-					*(new_item->widget.checkbox.value) =
-						*(list->widget.checkbox.value);
-
-			}
-			break;
-
-		case EB_INPUT_ENTRY:
-		case EB_INPUT_PASSWORD:
-			{
-				new_item->name =
-					s_strdup_allow_null(list->name);
-				new_item->label =
-					s_strdup_allow_null(list->label);
-				new_item->widget.entry.value =
-					s_strdup_pref(list->widget.entry.value);
-				new_item->widget.entry.entry = NULL;	/* this will be filled in when rendered - we ignore this field */
-			}
-			break;
-
-		case EB_INPUT_LIST:
-			{
-				new_item->name =
-					s_strdup_allow_null(list->name);
-				new_item->label =
-					s_strdup_allow_null(list->label);
-				new_item->widget.listbox.value =
-					calloc(1, sizeof(int));
-				new_item->widget.listbox.widget = NULL;	/* this will be filled in when rendered - we ignore this field */
-				new_item->widget.listbox.list =
-					list->widget.listbox.list;
-				if (list->widget.listbox.value != NULL)
-					*(new_item->widget.listbox.value) =
-						*(list->widget.listbox.value);
-			}
-			break;
-		default:
-			assert(FALSE);
-			break;
-		}
-
-		if (prev == NULL)
-			new_list = new_item;
-		else
-			prev->next = new_item;
-
-		prev = new_item;
-
-		list = list->next;
-	}
-
-	return (new_list);
-}
-
-static void s_destroy_input_list(input_list *inList)
-{
-	input_list *list = inList;
-
-	while (list != NULL) {
-		input_list *saved = list;
-
-		switch (list->type) {
-		case EB_INPUT_CHECKBOX:
-			{
-				free(list->name);
-				free(list->label);
-				free(list->widget.checkbox.value);
-			}
-			break;
-
-		case EB_INPUT_ENTRY:
-		case EB_INPUT_PASSWORD:
-			{
-				free(list->name);
-				free(list->label);
-				free(list->widget.entry.value);
-			}
-			break;
-
-		case EB_INPUT_LIST:
-			{
-				free(list->name);
-				free(list->label);
-				free(list->widget.listbox.value);
-			}
-			break;
-		default:
-			assert(FALSE);
-			break;
-		}
-
-		list = list->next;
-
-		memset(saved, 0, sizeof(input_list));
-
-		free(saved);
-	}
-}
 
 AyModulePrefs *ay_prefs_sift_modules(void)
 {
-	const LList *plugins = GetPref(EB_PLUGIN_LIST);
+	const GList *plugins = GetPref(EB_PLUGIN_LIST);
 	AyModulePrefs *out = g_new0(AyModulePrefs, 1);
 
 	for (; plugins; plugins = plugins->next) {
@@ -314,20 +128,20 @@ AyModulePrefs *ay_prefs_sift_modules(void)
 		switch (plugin_info->pi.type)
 		{
 		case PLUGIN_SERVICE:
-			out->services = l_list_append(out->services, plugin_info);
+			out->services = g_list_append(out->services, plugin_info);
 			break;
 		case PLUGIN_FILTER:
-			out->filters = l_list_append(out->filters, plugin_info);
+			out->filters = g_list_append(out->filters, plugin_info);
 			break;
 		case PLUGIN_UTILITY:
 		case PLUGIN_UNKNOWN:
-			out->utilities = l_list_append(out->utilities, plugin_info);
+			out->utilities = g_list_append(out->utilities, plugin_info);
 			break;
 		case PLUGIN_SMILEY:
-			out->smileys = l_list_append(out->smileys, plugin_info);
+			out->smileys = g_list_append(out->smileys, plugin_info);
 			break;
 		case PLUGIN_IMPORTER:
-			out->importers = l_list_append(out->importers, plugin_info);
+			out->importers = g_list_append(out->importers, plugin_info);
 			break;
 		}
 	}
@@ -337,11 +151,11 @@ AyModulePrefs *ay_prefs_sift_modules(void)
 
 void ay_prefs_modules_free(AyModulePrefs *modules)
 {
-	l_list_free(modules->services);
-	l_list_free(modules->filters);
-	l_list_free(modules->utilities);
-	l_list_free(modules->smileys);
-	l_list_free(modules->importers);
+	g_list_free(modules->services);
+	g_list_free(modules->filters);
+	g_list_free(modules->utilities);
+	g_list_free(modules->smileys);
+	g_list_free(modules->importers);
 
 	g_free(modules);
 }
@@ -350,8 +164,8 @@ static void s_write_module_prefs(void *inListItem, void *inData)
 {
 	eb_PLUGIN_INFO *plugin_info = inListItem;
 	FILE *fp = (FILE *)inData;
-	LList *master_prefs = NULL;
-	LList *current_prefs = NULL;
+	GList *master_prefs = NULL;
+	GList *current_prefs = NULL;
 
 	eb_debug(DBG_CORE, "Writing prefs for %s\n", plugin_info->name);
 
@@ -499,7 +313,7 @@ void ayttm_prefs_read_file(char *file)
 		return;
 	}
 
-	fgets(param, buffer_size, fp);
+	(void)fgets(param, buffer_size, fp);
 
 	while (!feof(fp)) {
 		int pref_type = CORE_PREF;
@@ -516,9 +330,9 @@ void ayttm_prefs_read_file(char *file)
 			for (;;) {
 				int id = -1;
 				char *plugin_name = NULL;
-				LList *session_prefs = NULL;
+				GList *session_prefs = NULL;
 
-				fgets(param, buffer_size, fp);
+				(void)fgets(param, buffer_size, fp);
 
 				s_strip_whitespace(param);
 
@@ -527,7 +341,7 @@ void ayttm_prefs_read_file(char *file)
 
 				switch (pref_type) {
 				case PLUGIN_PREF:
-					plugin_name = strdup(param);
+					plugin_name = g_strdup(param);
 					break;
 
 				case SERVICE_PREF:
@@ -540,9 +354,9 @@ void ayttm_prefs_read_file(char *file)
 				}
 
 				for (;;) {
-					LList *old_session_prefs = NULL;
+					GList *old_session_prefs = NULL;
 
-					fgets(param, buffer_size, fp);
+					(void)fgets(param, buffer_size, fp);
 
 					s_strip_whitespace(param);
 
@@ -554,7 +368,7 @@ void ayttm_prefs_read_file(char *file)
 								(plugin_name,
 								session_prefs);
 
-							free(plugin_name);
+							g_free(plugin_name);
 							break;
 
 						case SERVICE_PREF:
@@ -620,7 +434,7 @@ void ayttm_prefs_read_file(char *file)
 
 		cSetLocalPref(param, val);
 
-		fgets(param, buffer_size, fp);
+		(void)fgets(param, buffer_size, fp);
 	}
 
 	fclose(fp);
@@ -763,7 +577,7 @@ void ayttm_prefs_write(void)
 	/* modules */
 	fprintf(fp, "modules_path=%s\n", cGetLocalPref("modules_path"));
 	fprintf(fp, "plugins\n");
-	l_list_foreach(GetPref(EB_PLUGIN_LIST), s_write_module_prefs, fp);
+	g_list_foreach(GetPref(EB_PLUGIN_LIST), (GFunc)s_write_module_prefs, fp);
 	fprintf(fp, "end\n");
 
 	fclose(fp);
@@ -784,8 +598,8 @@ void *SetPref(const char *key, void *data)
 {
 	ptr_list *pref_data = NULL;
 	void *old_data = NULL;
-	LList *list_data =
-		l_list_find_custom(s_global_prefs, key, s_compare_ptr_key);
+	GList *list_data =
+		g_list_find_custom(s_global_prefs, key, (GCompareFunc)s_compare_ptr_key);
 
 	if (!list_data) {
 		s_add_pref(key, data);
@@ -803,8 +617,8 @@ void *SetPref(const char *key, void *data)
 void *GetPref(const char *key)
 {
 	ptr_list *pref_data = NULL;
-	LList *list_data =
-		l_list_find_custom(s_global_prefs, key, s_compare_ptr_key);
+	GList *list_data =
+		g_list_find_custom(s_global_prefs, key, (GCompareFunc)s_compare_ptr_key);
 
 	if (!list_data)
 		return (NULL);
@@ -824,10 +638,10 @@ void cSetLocalPref(const char *key, const char *data)
 
 	snprintf(newkey, MAX_PREF_NAME_LEN, "Local::%s", key);
 
-	oldvalue = SetPref(newkey, strdup(data));
+	oldvalue = SetPref(newkey, g_strdup(data));
 
 	if (oldvalue)
-		free(oldvalue);
+		g_free(oldvalue);
 }
 
 void iSetLocalPref(const char *key, int data)
@@ -881,7 +695,7 @@ int iGetLocalPref(const char *key)
 
 /* Used when loading service modules later, so passwords and user names are still available
  * as service:username */
-void save_account_info(const char *service, LList *pairs)
+void save_account_info(const char *service, GList *pairs)
 {
 	const int buffer_size = 256;
 	char buff[buffer_size];
@@ -891,7 +705,7 @@ void save_account_info(const char *service, LList *pairs)
 
 	snprintf(buff, buffer_size, "%s:%s", service, val);
 
-	free(val);
+	g_free(val);
 
 	SetPref(buff, pairs);
 }

@@ -498,7 +498,7 @@ int ay_connection_connect(AyConnection *con, AyConnectCallback cb,
 		connector->leash = g_async_queue_new();
 		connector->backleash = g_async_queue_new();
 
-		g_thread_create(_do_connect, connector, FALSE, NULL);
+		g_thread_unref(g_thread_new(NULL, _do_connect, connector));
 
 		/* Wait till the connector thread starts */
 		g_async_queue_pop(connector->leash);

@@ -30,18 +30,18 @@
 #ifndef __GLOBALS_H__
 #define __GLOBALS_H__
 
+#include <glib.h>
 #include "platform_defs.h"
-#include "llist.h"
 
 #if defined(__MINGW32__) && defined(__IN_PLUGIN__)
 #define extern __declspec(dllimport)
 #endif
 
-extern LList *groups;
-extern LList *temp_groups;
-extern LList *accounts;
-extern LList *chat_rooms;
-extern LList *away_messages;
+extern GList *groups;
+extern GList *temp_groups;
+extern GList *accounts;
+extern GList *chat_rooms;
+extern GList *away_messages;
 
 extern int is_away;
 

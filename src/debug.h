@@ -31,10 +31,10 @@ extern "C" {
 
 #define eb_debug(type, format, args...) {if(type) {EB_DEBUG(__FUNCTION__, __FILE__, __LINE__, format, ##args);}}
 #ifdef __STDC__
-	int EB_DEBUG(const char *func, char *file, int line, const char *fmt,
+	int EB_DEBUG(const char *func, const char *file, int line, const char *fmt,
 		...);
 #else
-	int EB_DEBUG(const char *func, char *file, int line, const char *fmt,
+	int EB_DEBUG(const char *func, const char *file, int line, const char *fmt,
 		va_alist);
 #endif
 

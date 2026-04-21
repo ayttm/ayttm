@@ -39,7 +39,7 @@
 # include <process.h>
 #endif
 
-#include <glib.h>		/* for llist_to_glist and glist_to_llist */
+#include <glib.h>		/* for GList and llist_to_glist */
 #include "contact.h"
 #include "conversation.h"
 
@@ -129,14 +129,13 @@ extern "C" {
 	pid_t create_lock_file(char *fname);
 	void delete_lock_file(char *fname);
 	void eb_generic_menu_function(void *add_button, void *userdata);
-	LList *get_groups();
+	GList *get_groups();
 	void rename_nick_log(char *oldgroup, char *oldnick,
 		const char *newgroup, const char *newnick);
 
 	eb_account *find_account_for_protocol(struct contact *c, int service);
-	GList *llist_to_glist(LList *l, int free_old);
-/* free_old will free the old list after converting */
-	LList *glist_to_llist(GList *g, int free_old);
+	GList *llist_to_glist(GList *l, int free_old);
+/* free_old will free the old list after copying */
 
 	int account_cmp(const void *a, const void *b);
 	int contact_cmp(const void *a, const void *b);
@@ -144,8 +143,8 @@ extern "C" {
 
 	int send_url(const char *url);
 	int eb_send_message(const char *to, const char *msg, int service);
-	LList *ay_save_account_information(int service_id);
-	void ay_restore_account_information(LList *saved);
+	GList *ay_save_account_information(int service_id);
+	void ay_restore_account_information(GList *saved);
 
 	int version_cmp(const char *v1, const char *v2);
 	char *ay_get_last_version(void);

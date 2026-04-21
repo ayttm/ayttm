@@ -87,7 +87,7 @@ class ay_activity_bar_pack {
  */
 class ay_activity_window {
 	private:
-	static LList *s_packs;
+	static GList *s_packs;
 	static GtkWidget *s_window;
 	static int s_last_tag;
 	static int s_timeout;
@@ -103,7 +103,7 @@ class ay_activity_window {
 	~ay_activity_window( void );
 };
 /* initialise static variables */
-LList *ay_activity_window::s_packs=NULL;
+GList *ay_activity_window::s_packs=NULL;
 GtkWidget *ay_activity_window::s_window=NULL;
 int ay_activity_window::s_last_tag=0;
 int ay_activity_window::s_timeout=0;
@@ -215,7 +215,7 @@ int ay_activity_window::add_pack(ay_activity_bar_pack *abp)
 	if(!s_window)
 		create_window();
 
-	s_packs = l_list_prepend(s_packs, abp);
+	s_packs = g_list_prepend(s_packs, abp);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(s_window)->vbox), abp->m_lbl, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(s_window)->vbox), abp->m_hbox, TRUE, TRUE, 0);
 
@@ -227,7 +227,7 @@ int ay_activity_window::add_pack(ay_activity_bar_pack *abp)
 
 void ay_activity_window::remove_pack(ay_activity_bar_pack *abp)
 {
-	s_packs = l_list_remove(s_packs, abp);
+	s_packs = g_list_remove(s_packs, abp);
 
 	if(abp->m_tag == s_last_tag)
 		s_last_tag--;
@@ -241,8 +241,8 @@ void ay_activity_window::remove_pack(ay_activity_bar_pack *abp)
 
 ay_activity_bar_pack * ay_activity_window::get_pack_by_tag(int tag) const
 {
-	LList *l;
-	for(l = s_packs; l; l = l_list_next(l)) {
+	GList *l;
+	for(l = s_packs; l; l = g_list_next(l)) {
 		ay_activity_bar_pack *abp = (ay_activity_bar_pack *)l->data;
 		if(abp->m_tag == tag) {
 			return abp;
@@ -265,7 +265,7 @@ void ay_activity_window::close_window( void )
 	while(s_packs) {
 		ay_activity_bar_pack *abp = (ay_activity_bar_pack *)s_packs->data;
 		abp->cancel();
-		s_packs = l_list_remove(s_packs, abp);
+		s_packs = g_list_remove(s_packs, abp);
 		delete abp;
 	}
 
@@ -312,8 +312,8 @@ static gint s_delete_event(GtkWidget *widget, GdkEvent *event, gpointer null)
 
 static int s_update_activity(void * data)
 {
-	LList *l = *((LList **)data);
-	for(; l; l = l_list_next(l)) {
+	GList *l = *((GList **)data);
+	for(; l; l = g_list_next(l)) {
 		ay_activity_bar_pack *abp = (ay_activity_bar_pack *)l->data;
 		abp->update_activity();
 	}

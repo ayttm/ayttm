@@ -25,7 +25,7 @@
 #ifndef __INPUT_LIST_H__
 #define __INPUT_LIST_H__
 
-#include "llist.h"
+#include <glib.h>
 
 enum {
 	EB_INPUT_CHECKBOX,
@@ -47,7 +47,7 @@ typedef struct _entry_input {
 
 typedef struct _list_input {
 	int *value;
-	LList *list;
+	GList *list;
 	void *widget;		/* GtkWidget */
 } list_input;
 
@@ -69,13 +69,13 @@ typedef struct _input_list {
 extern "C" {
 #endif
 
-	LList *eb_input_to_value_pair(input_list *il);
+	GList *eb_input_to_value_pair(input_list *il);
 
 #if defined(__MINGW32__) && defined(__IN_PLUGIN__)
 	 __declspec(dllimport) void eb_update_from_value_pair(input_list *il,
-		LList *vp);
+		GList *vp);
 #else
-	extern void eb_update_from_value_pair(input_list *il, LList *vp);
+	extern void eb_update_from_value_pair(input_list *il, GList *vp);
 #endif
 
 #ifdef __cplusplus

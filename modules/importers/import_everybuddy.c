@@ -147,18 +147,13 @@ static void ok_callback(GtkWidget *widget, gpointer data)
 		char saved[7][MAX_PREF_LEN];
 		FILE *in;
 
-		strncpy(saved[0], cGetLocalPref("BuddyArriveFilename"),
-			MAX_PREF_LEN);
-		strncpy(saved[1], cGetLocalPref("BuddyAwayFilename"),
-			MAX_PREF_LEN);
-		strncpy(saved[2], cGetLocalPref("BuddyLeaveFilename"),
-			MAX_PREF_LEN);
-		strncpy(saved[3], cGetLocalPref("SendFilename"), MAX_PREF_LEN);
-		strncpy(saved[4], cGetLocalPref("ReceiveFilename"),
-			MAX_PREF_LEN);
-		strncpy(saved[5], cGetLocalPref("FirstMsgFilename"),
-			MAX_PREF_LEN);
-		strncpy(saved[6], cGetLocalPref("modules_path"), MAX_PREF_LEN);
+		g_strlcpy(saved[0], cGetLocalPref("BuddyArriveFilename"), MAX_PREF_LEN);
+		g_strlcpy(saved[1], cGetLocalPref("BuddyAwayFilename"), MAX_PREF_LEN);
+		g_strlcpy(saved[2], cGetLocalPref("BuddyLeaveFilename"), MAX_PREF_LEN);
+		g_strlcpy(saved[3], cGetLocalPref("SendFilename"), MAX_PREF_LEN);
+		g_strlcpy(saved[4], cGetLocalPref("ReceiveFilename"), MAX_PREF_LEN);
+		g_strlcpy(saved[5], cGetLocalPref("FirstMsgFilename"), MAX_PREF_LEN);
+		g_strlcpy(saved[6], cGetLocalPref("modules_path"), MAX_PREF_LEN);
 
 		snprintf(buff, 1024, "%s/.everybuddy/prefs", getenv("HOME"));
 		in = fopen(buff, "r");

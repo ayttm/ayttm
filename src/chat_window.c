@@ -83,7 +83,7 @@ void flash_title(GdkWindow *window);
 static gboolean handle_focus(GtkWidget *widget, GdkEventFocus *event,
 	gpointer userdata);
 
-LList *chat_window_list = NULL;
+GList *chat_window_list = NULL;
 
 #ifdef __MINGW32__
 static void redraw_chat_window(GtkWidget *text)
@@ -187,8 +187,8 @@ static void remove_smiley_window(chat_window *cw)
 void remove_from_chat_window_list(chat_window *cw)
 {
 	if (chat_window_list)
-		chat_window_list = l_list_remove(chat_window_list, cw);
-	if (!l_list_length(chat_window_list) || !chat_window_list->data) {
+		chat_window_list = g_list_remove(chat_window_list, cw);
+	if (!g_list_length(chat_window_list) || !chat_window_list->data) {
 		chat_window_list = NULL;
 		eb_debug(DBG_CORE, "no more windows\n");
 	}
@@ -364,15 +364,15 @@ void send_message(GtkWidget *widget, gpointer d)
 		return;
 
 	if (data->conv->this_msg_in_history) {
-		LList *node = NULL, *node2 = NULL;
+		GList *node = NULL, *node2 = NULL;
 
 		for (node = data->conv->history; node; node = node->next)
 			node2 = node;
-		free(node2->data);
-		node2->data = strdup(text);
+		g_free(node2->data);
+		node2->data = g_strdup(text);
 		data->conv->this_msg_in_history = 0;
 	} else {
-		data->conv->history = l_list_append(data->conv->history, strdup(text));
+		data->conv->history = g_list_append(data->conv->history, g_strdup(text));
 		data->conv->hist_pos = NULL;
 	}
 
@@ -516,7 +516,7 @@ static void allow_offline_callback(GtkWidget *offline_button, gpointer userdata)
 
 static void get_group_contacts(gchar *group, chat_window *cw)
 {
-        LList *node = NULL, *accounts = NULL;
+        GList *node = NULL, *accounts = NULL;
 	grouplist *g;
 	Conversation *conv = cw->conv;
 
@@ -547,7 +547,7 @@ static void get_group_contacts(gchar *group, chat_window *cw)
 
 static void get_contacts(chat_window *cw)
 {
-        LList *node = groups;
+        GList *node = groups;
 	while (node) {
 		get_group_contacts(node->data, cw);
 		node = node->next;
@@ -692,7 +692,7 @@ static void change_local_account_on_click(GtkWidget *button, gpointer userdata)
 static GtkWidget *get_local_accounts(Conversation *cw)
 {
 	GtkWidget *submenu, *label, *button;
-	char *handle = NULL, buff[256];
+	char *handle = NULL, buff[2048];
 	eb_local_account *first_act = NULL, *subsequent_act = NULL;
 	chat_window_account *cwa = NULL;
 
@@ -745,13 +745,14 @@ static gboolean handle_focus(GtkWidget *widget, GdkEventFocus *event,
 	GtkWidget *chatpane = NULL;
 
 	/* Bring this window to the front of the list */
-	chat_window_list = l_list_remove(chat_window_list, cw);
-	chat_window_list = l_list_prepend(chat_window_list, cw);
+	chat_window_list = g_list_remove(chat_window_list, cw);
+	chat_window_list = g_list_prepend(chat_window_list, cw);
 
-	if (cw->notebook)
+	if (cw->notebook) {
 		chatpane = gtk_notebook_get_nth_page(GTK_NOTEBOOK(cw->notebook),
 			gtk_notebook_get_current_page(GTK_NOTEBOOK(cw->notebook)));
 		cw = g_object_get_data(G_OBJECT(chatpane), "cw_object");
+	}
 
 	if (cw)
 		gtk_widget_grab_focus(cw->entry);
@@ -973,7 +974,6 @@ static void chat_history_up(chat_window *cw)
 	GtkTextBuffer *buffer =
 		gtk_text_view_get_buffer(GTK_TEXT_VIEW(cw->entry));
 	GtkTextIter start, end;
-	int p = 0;
 
 	gtk_text_buffer_get_bounds(buffer, &start, &end);
 
@@ -981,14 +981,14 @@ static void chat_history_up(chat_window *cw)
 		return;
 
 	if (!cw->conv->hist_pos) {
-		LList *node = NULL;
+		GList *node = NULL;
 		char *s = gtk_text_buffer_get_text(buffer, &start, &end, FALSE);
 
 		for (node = cw->conv->history; node; node = node->next)
 			cw->conv->hist_pos = node;
 
 		if (strlen(s) > 0) {
-			cw->conv->history = l_list_append(cw->conv->history, strdup(s));
+			cw->conv->history = g_list_append(cw->conv->history, g_strdup(s));
 			g_free(s);
 			cw->conv->this_msg_in_history = 1;
 		}
@@ -996,7 +996,7 @@ static void chat_history_up(chat_window *cw)
 		cw->conv->hist_pos = cw->conv->hist_pos->prev;
 
 	gtk_text_buffer_delete(buffer, &start, &end);
-	p = cw_set_message(cw, cw->conv->hist_pos->data);
+	cw_set_message(cw, cw->conv->hist_pos->data);
 }
 
 static void chat_history_down(chat_window *cw)
@@ -1004,7 +1004,6 @@ static void chat_history_down(chat_window *cw)
 	GtkTextBuffer *buffer =
 		gtk_text_view_get_buffer(GTK_TEXT_VIEW(cw->entry));
 	GtkTextIter start, end;
-	int p = 0;
 
 	gtk_text_buffer_get_bounds(buffer, &start, &end);
 
@@ -1016,7 +1015,7 @@ static void chat_history_down(chat_window *cw)
 	gtk_text_buffer_delete(buffer, &start, &end);
 
 	if (cw->conv->hist_pos)
-		p = cw_set_message(cw, cw->conv->hist_pos->data);
+		cw_set_message(cw, cw->conv->hist_pos->data);
 }
 
 /* TODO: Review this */
@@ -1138,7 +1137,7 @@ gboolean chat_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
 	GtkNotebookPage *page, gint page_num, gpointer user_data)
 {
 	/ * find the contact for the page we just switched to and turn off their talking penguin icon * /
-	LList *l1 = chat_window_list;
+	GList *l1 = chat_window_list;
 	GtkWidget *label = NULL;
 
 	while (l1 && l1->data) {
@@ -1498,7 +1497,7 @@ static void layout_chatwindow(chat_window *cw, GtkWidget *vbox,
 	gtk_window_add_accel_group(GTK_WINDOW(cw->window), accel_group);
 	cw->pane = vbox;
 
-	chat_window_list = l_list_prepend(chat_window_list, cw);
+	chat_window_list = g_list_prepend(chat_window_list, cw);
 }
 
 void ay_chat_window_fellows_append(chat_window *cw, ConversationFellow *fellow)
@@ -1883,8 +1882,8 @@ chat_window *ay_chat_window_new(Conversation *conv)
 	}
 
 	/* This is the invite button */
-	if (cw->conv->is_room || conv->local_user &&
-	    can_conference(GET_SERVICE(conv->local_user))) {
+	if (cw->conv->is_room || (conv->local_user &&
+	    can_conference(GET_SERVICE(conv->local_user)))) {
 		ICON_CREATE_XPM(icon, iconwid, invite_btn_xpm);
 		TOOLBAR_APPEND(invite_button, _("Invite (CTRL+I)"), iconwid,
 			       do_invite_window, cw);
@@ -1958,7 +1957,7 @@ static GtkWidget *reconnect_chkbtn;
 static GList *chat_service_list(GtkComboBox *service_list)
 {
 	GList *list = NULL;
-	LList *walk = NULL;
+	GList *walk = NULL;
 
 	for (walk = accounts; walk; walk = walk->next) {
 		eb_local_account *ela = (eb_local_account *)walk->data;
@@ -1973,9 +1972,9 @@ static GList *chat_service_list(GtkComboBox *service_list)
 	return list;
 }
 
-static LList *get_chatroom_mru(void)
+static GList *get_chatroom_mru(void)
 {
-	LList *mru = NULL;
+	GList *mru = NULL;
 	char buff[4096];
 	FILE *fp = NULL;
 
@@ -1984,10 +1983,10 @@ static LList *get_chatroom_mru(void)
 	fp = fopen(buff, "r");
 	memset(buff, 0, 4096);
 	while (fp && fgets(buff, sizeof(buff), fp)) {
-		char *name = strdup((char *)buff);
+		char *name = g_strdup((char *)buff);
 		if (name[strlen(name) - 1] == '\n')
 			name[strlen(name) - 1] = '\0';
-		mru = l_list_append(mru, name);
+		mru = g_list_append(mru, name);
 		eb_debug(DBG_CORE, "name='%s'\n", name);
 		memset(buff, 0, 4096);
 	}
@@ -2007,7 +2006,7 @@ static void load_chatroom_mru(GtkComboBox *combo)
 	fp = fopen(buff, "r");
 	memset(buff, 0, 4096);
 	while (fp && fgets(buff, sizeof(buff), fp)) {
-		char *name = strdup((char *)buff);
+		char *name = g_strdup((char *)buff);
 		if (name[strlen(name) - 1] == '\n')
 			name[strlen(name) - 1] = '\0';
 		gtk_combo_box_append_text(combo, name);
@@ -2021,8 +2020,8 @@ static void load_chatroom_mru(GtkComboBox *combo)
 
 static void add_chatroom_mru(const char *name)
 {
-	LList *mru = get_chatroom_mru();
-	LList *cur = NULL;
+	GList *mru = get_chatroom_mru();
+	GList *cur = NULL;
 	char buff[4096];
 	FILE *fp = NULL;
 	int i = 0;
@@ -2032,7 +2031,7 @@ static void add_chatroom_mru(const char *name)
 	fp = fopen(buff, "w");
 	memset(buff, 0, 4096);
 
-	mru = l_list_prepend(mru, strdup(name));
+	mru = g_list_prepend(mru, g_strdup(name));
 
 	if (fp) {
 		for (cur = mru; cur && cur->data && i < 10; cur = cur->next)
@@ -2044,7 +2043,7 @@ static void add_chatroom_mru(const char *name)
 		fclose(fp);
 	}
 
-	l_list_free(mru);
+	g_list_free(mru);
 }
 
 static void join_chat_callback(GtkWidget *widget, int response, gpointer data)
@@ -2114,16 +2113,14 @@ static void update_public_sensitivity(GtkWidget *widget, gpointer data)
 	char *service =
 		gtk_combo_box_get_active_text(GTK_COMBO_BOX(chat_room_type));
 	char *mservice = NULL;
-	char *local_acc = NULL;
 	int service_id = -1;
 	int has_public = 0;
 
-	if (!service && (!strstr(service, "]") || !strstr(service, " "))) {
+	if (!service || !strstr(service, "]") || !strstr(service, " ")) {
 		g_free(service);
 		return;
 	}
 
-	local_acc = strstr(service, " ") + 1;
 	*(strstr(service, "]")) = '\0';
 	mservice = strstr(service, "[") + 1;
 
@@ -2146,7 +2143,7 @@ static void choose_list_cb(const char *text, gpointer data)
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(public_chkbtn), TRUE);
 }
 
-static void got_chatroom_list(LList *list, void *data)
+static void got_chatroom_list(GList *list, void *data)
 {
 	if (!list) {
 		ay_do_error(_("Cannot list chatrooms"),
@@ -2160,7 +2157,7 @@ static void got_chatroom_list(LList *list, void *data)
 	gtk_button_set_label(GTK_BUTTON(data), _("List public chatrooms..."));
 	gtk_widget_set_sensitive(GTK_WIDGET(data), TRUE);
 
-	l_list_free(list);
+	g_list_free(list);
 }
 
 static void list_public_chatrooms(GtkWidget *widget, gpointer data)

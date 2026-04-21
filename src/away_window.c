@@ -73,7 +73,7 @@ void show_away_choicewindow(void *w, void *data)
 
 static void destroy_away()
 {
-	LList *list;
+	GList *list;
 	eb_local_account *ela = NULL;
 
 	is_away = 0;
@@ -87,7 +87,7 @@ static void destroy_away()
 
 static void show_away(gchar *a_message, void *unused)
 {
-	LList *list;
+	GList *list;
 	eb_local_account *ela = NULL;
 
 	if (!is_away) {

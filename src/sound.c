@@ -92,8 +92,8 @@ static int play_audio(gchar *soundfile)
 	}
 	fstat(fd, &info);
 	buf = alloca(info.st_size);
-	read(fd, buf, 24);
-	read(fd, buf, info.st_size - 24);
+	(void)read(fd, buf, 24);
+	(void)read(fd, buf, info.st_size - 24);
 	close(fd);
 
 	audio_device = getenv("AUDIODEV");
@@ -108,7 +108,7 @@ static int play_audio(gchar *soundfile)
 	fd = open(audio_device, O_WRONLY | O_EXCL);
 	if (fd < 0)
 		return FALSE;
-	write(fd, buf, info.st_size - 24);
+	(void)write(fd, buf, info.st_size - 24);
 	close(fd);
 
 	return TRUE;
@@ -382,7 +382,7 @@ static int play_arts_file(gchar *soundfile)
 	artsStream =
 		arts_play_stream(sampleRate, sampleWidth, channelCount,
 		"EVERYBUDDY");
-	buf = (char *)malloc(BUFFERED_FRAME_COUNT * frameSize);
+	buf = (char *)g_malloc(BUFFERED_FRAME_COUNT * frameSize);
 	count = afReadFrames(fd, AF_DEFAULT_TRACK, buf, BUFFERED_FRAME_COUNT);
 	do {
 		err = arts_write(artsStream, buf, count * frameSize);
@@ -396,7 +396,7 @@ static int play_arts_file(gchar *soundfile)
 	} while ((count =
 			afReadFrames(fd, AF_DEFAULT_TRACK, buf,
 				BUFFERED_FRAME_COUNT)) && (err >= 0));
-	free(buf);
+	g_free(buf);
 	arts_close_stream(artsStream);
 
 	afCloseFile(fd);

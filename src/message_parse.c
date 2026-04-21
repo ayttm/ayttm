@@ -149,7 +149,7 @@ static void send_file2(void *ptr)
 	}
 
 	if ((i - 1) % 1024 != 0) {
-		write(sfs->s, buff, (i - 1) % 1024);
+		(void)write(sfs->s, buff, (i - 1) % 1024);
 	}
 
 	signal(SIGPIPE, SIG_DFL);
@@ -177,18 +177,18 @@ static int update_send_progress(void *data)
 			_("Remote Side Disconnected"));
 		ay_activity_bar_remove(pcd->tag);
 		eb_timeout_remove(pcd->timer);
-		free(pcd);
+		g_free(pcd);
 	} else if (xfer_in_progress == -2) {
 		ay_do_error(_("Ayttm File Transfer"), _("Unable to open file"));
 		ay_activity_bar_remove(pcd->tag);
 		eb_timeout_remove(pcd->timer);
-		free(pcd);
+		g_free(pcd);
 	} else {
 		ay_do_info(_("Ayttm File Transfer"),
 			_("File Sent Successfully"));
 		ay_activity_bar_remove(pcd->tag);
 		eb_timeout_remove(pcd->timer);
-		free(pcd);
+		g_free(pcd);
 	}
 #ifdef HAVE_PTHREAD
 	pthread_mutex_unlock(&mutex);
@@ -221,10 +221,10 @@ static void send_file(char *filename, int s)
 		}
 	}
 	snprintf(buff, 5, "%05ld", strlen(filename + i + 1));
-	write(s, buff, 5);
-	write(s, filename + i + 1, strlen(filename + i + 1));
+	(void)write(s, buff, 5);
+	(void)write(s, filename + i + 1, strlen(filename + i + 1));
 	filelen = htonl(fileinfo.st_size);
-	write(s, &filelen, 4);
+	(void)write(s, &filelen, 4);
 
 	/*
 	   FD_ZERO(&set);
@@ -239,11 +239,11 @@ static void send_file(char *filename, int s)
 	   gtk_main_iteration();
 	   }
 	 */
-	read(s, accept, 10);
+	(void)read(s, accept, 10);
 
 	if (!strcmp(accept, "ACCEPT")) {
 		progress_callback_data *pcd =
-			calloc(1, sizeof(progress_callback_data));
+			g_new0(progress_callback_data, 1);
 		char label[1024];
 		xfer_in_progress = 1;
 		fp = fopen(filename, "rb");
@@ -284,7 +284,7 @@ static void get_file2(void *data, int source, eb_input_condition condition)
 
 		xfer_in_progress = 0;
 		eb_input_remove(pcd->input);
-		free(pcd);
+		g_free(pcd);
 	} else {
 		int i;
 		for (i = 0; i < len2; i++) {
@@ -307,12 +307,12 @@ static void accept_file(void *data, int result)
 		pcd->input = eb_input_add(fd, EB_INPUT_READ, get_file2, pcd);
 	} else {
 		char val[10] = "DENY";
-		write(fd, val, 10);
+		(void)write(fd, val, 10);
 		close(fd);
 		fclose(fp);
 		xfer_in_progress = 0;
 		ay_activity_bar_remove(pcd->tag);
-		free(pcd);
+		g_free(pcd);
 	}
 }
 
@@ -324,7 +324,7 @@ static void get_file(int s)
 	char buffer2[1024];
 	char buffer[1024];
 	char buffer3[1024];
-	progress_callback_data *pcd = calloc(1, sizeof(progress_callback_data));
+	progress_callback_data *pcd = g_new0(progress_callback_data, 1);
 	fd_set set;
 
 	fd = accept(s, NULL, NULL);
@@ -352,10 +352,21 @@ static void get_file(int s)
 	recv(fd, &filelen, 4, 0);
 	filelen = ntohl(filelen);
 
-	snprintf(buffer, 1024, "Transferring %s...", buffer2);
+	snprintf(buffer, sizeof(buffer), "Transferring %.*s...",
+		(int)(sizeof(buffer) - 17), buffer2);
 	pcd->tag = ay_progress_bar_add(buffer, filelen, NULL, NULL);
 
-	snprintf(buffer, 1024, "%s/%s", getenv("HOME"), buffer2);
+	{
+		/* Strip directory components from the received filename to
+		 * prevent path traversal attacks (e.g. "../../.bashrc").
+		 * Use g_get_home_dir() rather than getenv("HOME") to avoid
+		 * treating the home directory as a tainted path component. */
+		char *safe_name = g_path_get_basename(buffer2);
+		char *dest_path = g_build_filename(g_get_home_dir(), safe_name, NULL);
+		g_strlcpy(buffer, dest_path, sizeof(buffer));
+		g_free(dest_path);
+		g_free(safe_name);
+	}
 	printf("receiving file %s\n", buffer);
 	amount_received = 0;
 	fp = fopen(buffer, "wb");
@@ -370,7 +381,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 	eb_account *remote, char *message)
 {
 	char *ptr;
-	char *buff = strdup(message);
+	char *buff = g_strdup(message);
 
 	ptr = strtok(buff, " ");
 
@@ -391,7 +402,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 			if (hp == NULL) {	/* we don't exist !? */
 				eb_debug(DBG_CORE, "gethostbyname failed: %s\n",
 					strerror(errno));
-				free(buff);
+				g_free(buff);
 				return;
 			}
 			sa.sin_family = hp->h_addrtype;	/* this is our host address */
@@ -399,7 +410,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 			if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0) {	/* create socket */
 				eb_debug(DBG_CORE, "socket failed: %s\n",
 					strerror(errno));
-				free(buff);
+				g_free(buff);
 				return;
 			}
 			if (bind(s, (struct sockaddr *)&sa,
@@ -407,7 +418,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 				eb_debug(DBG_CORE, "bind failed: %s\n",
 					strerror(errno));
 				close(s);
-				free(buff);
+				g_free(buff);
 				return;	/* bind address to socket */
 			}
 			listen(s, 1);	/* max # of queued connects */
@@ -422,7 +433,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 
 			ptr = strtok(NULL, " ");
 			if (!ptr) {
-				free(buff);
+				g_free(buff);
 				return;
 			}
 
@@ -445,7 +456,7 @@ void eb_parse_incoming_message(eb_local_account *account,
 			remote->account_contact->nick, message);
 	}
 
-	free(buff);
+	g_free(buff);
 }
 
 void eb_update_status(eb_account *remote, const char *message)

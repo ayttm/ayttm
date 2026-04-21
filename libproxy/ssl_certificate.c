@@ -329,7 +329,7 @@ static int ssl_certificate_compare(SSLCertificate *cert_a,
 
 char *ssl_certificate_check_signer(X509 *cert)
 {
-	X509_STORE_CTX store_ctx;
+	X509_STORE_CTX *store_ctx;
 	X509_STORE *store;
 	char *err_msg = NULL;
 
@@ -343,19 +343,28 @@ char *ssl_certificate_check_signer(X509 *cert)
 		return g_strdup(_("Can't load X509 default paths"));
 	}
 
-	X509_STORE_CTX_init(&store_ctx, store, cert, NULL);
+	store_ctx = X509_STORE_CTX_new();
+	if (store_ctx == NULL) {
+		X509_STORE_free(store);
+		return g_strdup(_("Can't create X509_STORE_CTX"));
+	}
+	if (!X509_STORE_CTX_init(store_ctx, store, cert, NULL)) {
+		X509_STORE_CTX_free(store_ctx);
+		X509_STORE_free(store);
+		return g_strdup(_("Can't initialize X509_STORE_CTX"));
+	}
 
-	if (!X509_verify_cert(&store_ctx)) {
+	if (!X509_verify_cert(store_ctx)) {
 		err_msg =
 			g_strdup(X509_verify_cert_error_string
-			(X509_STORE_CTX_get_error(&store_ctx)));
+			(X509_STORE_CTX_get_error(store_ctx)));
 		eb_debug(DBG_CORE, "Can't check signer: %s\n", err_msg);
-		X509_STORE_CTX_cleanup(&store_ctx);
+		X509_STORE_CTX_free(store_ctx);
 		X509_STORE_free(store);
 		return err_msg;
 
 	}
-	X509_STORE_CTX_cleanup(&store_ctx);
+	X509_STORE_CTX_free(store_ctx);
 	X509_STORE_free(store);
 	return NULL;
 }

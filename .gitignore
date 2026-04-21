@@ -1,0 +1,66 @@
+# Build system generated files
+Makefile
+Makefile.in
+/configure
+aclocal.m4
+config.log
+config.cache
+config.status
+config.guess
+config.sub
+config.h
+config.h.in
+libtool
+ltmain.sh
+libltdl/
+autom4te.cache/
+stamp-h
+stamp-h1
+depcomp
+install-sh
+missing
+mkinstalldirs
+
+# Build artifacts
+.deps/
+.libs/
+*.o
+*.lo
+*.la
+*.a
+*.so
+*.so.*
+*.dylib
+
+# Autotools dist tarballs
+ayttm-*.tar.gz
+ayttm-*.tar.bz2
+ayttm-*.zip
+
+# Generated files from lex/yacc
+*.tab.c
+*.tab.h
+lex.yy.c
+
+# Desktop and spec files generated from templates
+*.desktop
+ayttm.spec
+
+# User config sample
+ayttmrc
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+\#*\#
+.#*
+
+# macOS
+.DS_Store
+
+# Sanitizer / profiling output
+*.profdata
+*.profraw

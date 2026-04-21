@@ -19,7 +19,7 @@ ayttm_SOURCES = main.c contactlist.c edit_local_accounts.c service.c status.c \
 	trigger.c console_session.c input_list.c nomodule.c \
 	plugin_api.c plugin.c file_select.c contact_actions.c \
 	smileys.c help_menu.c crash.c account_parser.y account_scanner.l \
-	contact_parser.y contact_scanner.l llist.c mem_util.c \
+	contact_parser.y contact_scanner.l mem_util.c \
 	offline_queue_mgmt.c image_window.c action.c about.c \
 	messages.c edit_list_window.c flash_window_title.c icons.c \
 	charconv.c ayttm_tray.c auto_complete.c $(WIN32_SRC)
@@ -32,7 +32,7 @@ noinst_HEADERS = account.h service.h contact.h gtk_globals.h globals.h \
 	browser.h input_list.h plugin.h plugin_api.h debug.h \
 	nomodule.h file_select.h contact_actions.h activity_bar.h \
 	smileys.h intl.h account_parser.h contact_parser.h crash.h \
-	externs.h llist.h mem_util.h offline_queue_mgmt.h \
+	externs.h mem_util.h offline_queue_mgmt.h \
 	image_window.h action.h about.h messages.h \
 	edit_local_accounts.h  platform_defs.h edit_list_window.h \
 	ui_about_window.h ui_file_selection_dlg.h ui_log_window.h \
@@ -78,19 +78,15 @@ defaults.h:
 
 prefs.$(OBJEXT) plugin.$(OBJEXT): defaults.h
 
-account_parser.h: account_parser.y
+account_parser.h: account_parser.c
 
 account_parser.c: account_parser.y
-	$(YACC) $(AM_LFLAGS) $(LFLAGS) -d -p account $< && \
-		mv y.tab.c $*.c && \
-		mv y.tab.h $*.h
+	$(YACC) $(AM_LFLAGS) $(LFLAGS) -d -p account -o $@ $<
 
-contact_parser.h: contact_parser.y
+contact_parser.h: contact_parser.c
 
 contact_parser.c: contact_parser.y
-	$(YACC) $(AM_LFLAGS) $(LFLAGS) -d -p contact $< && \
-		mv y.tab.c $*.c && \
-		mv y.tab.h $*.h
+	$(YACC) $(AM_LFLAGS) $(LFLAGS) -d -p contact -o $@ $<
 
 account_scanner.c: account_scanner.l
 	$(LEX) $(AM_LFLAGS) $(LFLAGS) -i -t -Paccount $< > $@

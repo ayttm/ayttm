@@ -33,7 +33,7 @@
 %}
 
 %union {
-	LList * vals;
+	GList * vals;
 	value_pair * val;
 	char * string;
 	eb_local_account * acnt;
@@ -56,7 +56,7 @@ account_list:
 	| 	account account_list
 		{
 			if($1) {
-				$$ = l_list_insert_sorted( $2, $1, laccount_cmp );
+				$$ = g_list_insert_sorted( $2, $1, (GCompareFunc)laccount_cmp );
 				eb_debug(DBG_CORE, "Adding account %s\n", $1->handle);
 			} else {
 				$$=$2;

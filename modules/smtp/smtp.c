@@ -96,7 +96,7 @@ unsigned int module_version()
 
 static int plugin_init()
 {
-	input_list *il = calloc(1, sizeof(input_list));
+	input_list *il = g_new0(input_list, 1);
 	ref_count = 0;
 
 	plugin_info.prefs = il;
@@ -105,7 +105,7 @@ static int plugin_init()
 	il->label = _("Enable debugging");
 	il->type = EB_INPUT_CHECKBOX;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.checkbox.value = &default_online;
 	il->name = "default_online";
@@ -178,7 +178,7 @@ static void smtp_account_prefs_init(eb_local_account *ela)
 {
 	eb_smtp_local_account_data *sla = ela->protocol_local_account_data;
 
-	input_list *il = calloc(1, sizeof(input_list));
+	input_list *il = g_new0(input_list, 1);
 
 	ela->prefs = il;
 	il->widget.entry.value = ela->handle;
@@ -186,21 +186,21 @@ static void smtp_account_prefs_init(eb_local_account *ela)
 	il->label = _("_Email Address:");
 	il->type = EB_INPUT_ENTRY;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = sla->password;
 	il->name = "PASSWORD";
 	il->label = _("_Password:");
 	il->type = EB_INPUT_ENTRY;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = sla->smtp_host;
 	il->name = "smtp_host";
 	il->label = _("SMTP _Server:");
 	il->type = EB_INPUT_ENTRY;
 
-	il->next = calloc(1, sizeof(input_list));
+	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = sla->smtp_port;
 	il->name = "smtp_port";
@@ -209,7 +209,7 @@ static void smtp_account_prefs_init(eb_local_account *ela)
 
 }
 
-static LList *eb_smtp_buddies = NULL;
+static GList *eb_smtp_buddies = NULL;
 
 static int smtp_tcp_readline(char *buff, int maxlen, AyConnection *fd)
 {
@@ -256,7 +256,7 @@ static int smtp_tcp_writeline(char *buff, AyConnection *fd)
 	return ret;
 }
 
-static eb_local_account *eb_smtp_read_local_account_config(LList *pairs)
+static eb_local_account *eb_smtp_read_local_account_config(GList *pairs)
 {
 	eb_local_account *ela;
 	eb_smtp_local_account_data *sla;
@@ -266,8 +266,8 @@ static eb_local_account *eb_smtp_read_local_account_config(LList *pairs)
 		return NULL;
 	}
 
-	ela = calloc(1, sizeof(eb_local_account));
-	sla = calloc(1, sizeof(eb_smtp_local_account_data));
+	ela = g_new0(eb_local_account, 1);
+	sla = g_new0(eb_smtp_local_account_data, 1);
 
 	sla->status = SMTP_STATUS_OFFLINE;
 
@@ -285,7 +285,7 @@ static eb_local_account *eb_smtp_read_local_account_config(LList *pairs)
 	return ela;
 }
 
-static LList *eb_smtp_write_local_config(eb_local_account *account)
+static GList *eb_smtp_write_local_config(eb_local_account *account)
 {
 	return eb_input_to_value_pair(account->prefs);
 }
@@ -311,7 +311,7 @@ static void _buddy_change_state(void *data, void *user_data)
 	buddy_update_status(ea);
 }
 
-static LList *pending_connects = NULL;
+static GList *pending_connects = NULL;
 
 static void eb_smtp_login(eb_local_account *account)
 {
@@ -332,14 +332,14 @@ static void eb_smtp_login(eb_local_account *account)
 	if (default_online)
 		status = SMTP_STATUS_ONLINE;
 
-	l_list_foreach(eb_smtp_buddies, _buddy_change_state, (void *)status);
+	g_list_foreach(eb_smtp_buddies, (GFunc)_buddy_change_state, (void *)status);
 }
 
 static void eb_smtp_logout(eb_local_account *account)
 {
 	/* cannot logout */
 	eb_smtp_local_account_data *sla = account->protocol_local_account_data;
-	LList *l;
+	GList *l;
 
 	for (l = pending_connects; l; l = l->next)
 		ay_connection_cancel_connect((int)l->data);
@@ -354,16 +354,16 @@ static void eb_smtp_logout(eb_local_account *account)
 		is_setting_state = 0;
 	}
 
-	l_list_foreach(eb_smtp_buddies, _buddy_change_state,
+	g_list_foreach(eb_smtp_buddies, (GFunc)_buddy_change_state,
 		(void *)SMTP_STATUS_OFFLINE);
 }
 
-static LList *eb_smtp_get_states()
+static GList *eb_smtp_get_states()
 {
-	LList *states = NULL;
+	GList *states = NULL;
 
-	states = l_list_append(states, "Online");
-	states = l_list_append(states, "Offline");
+	states = g_list_append(states, "Online");
+	states = g_list_append(states, "Offline");
 
 	return states;
 }
@@ -402,8 +402,8 @@ static void eb_smtp_set_away(eb_local_account *account, char *message, int away)
 static eb_account *eb_smtp_new_account(eb_local_account *ela,
 	const char *account)
 {
-	eb_account *ea = calloc(1, sizeof(eb_account));
-	eb_smtp_account_data *sad = calloc(1, sizeof(eb_smtp_account_data));
+	eb_account *ea = g_new0(eb_account, 1);
+	eb_smtp_account_data *sad = g_new0(eb_smtp_account_data, 1);
 
 	ea->protocol_account_data = sad;
 	ea->ela = ela;
@@ -427,7 +427,7 @@ static void eb_smtp_add_user(eb_account *account)
 
 	sla = ela->protocol_local_account_data;
 
-	eb_smtp_buddies = l_list_append(eb_smtp_buddies, account->handle);
+	eb_smtp_buddies = g_list_append(eb_smtp_buddies, account->handle);
 
 	if ((sad->status = sla->status) == SMTP_STATUS_ONLINE)
 		buddy_login(account);
@@ -435,12 +435,12 @@ static void eb_smtp_add_user(eb_account *account)
 
 static void eb_smtp_del_user(eb_account *account)
 {
-	eb_smtp_buddies = l_list_remove(eb_smtp_buddies, account->handle);
+	eb_smtp_buddies = g_list_remove(eb_smtp_buddies, account->handle);
 }
 
-static eb_account *eb_smtp_read_account_config(eb_account *ea, LList *config)
+static eb_account *eb_smtp_read_account_config(eb_account *ea, GList *config)
 {
-	eb_smtp_account_data *sad = calloc(1, sizeof(eb_smtp_account_data));
+	eb_smtp_account_data *sad = g_new0(eb_smtp_account_data, 1);
 
 	sad->status = SMTP_STATUS_OFFLINE;
 
@@ -529,8 +529,8 @@ static void destroy_callback_data(struct smtp_callback_data *d)
 {
 	if (d->tag)
 		eb_input_remove(d->tag);
-	free(d->msg);
-	free(d);
+	g_free(d->msg);
+	g_free(d);
 }
 
 static void smtp_message_sent(struct smtp_callback_data *d, int success)
@@ -624,7 +624,7 @@ static void eb_smtp_got_connected(AyConnection *fd, int error, void *data)
 		return;
 	}
 
-	pending_connects = l_list_remove(pending_connects, (void *)d->tag);
+	pending_connects = g_list_remove(pending_connects, (void *)d->tag);
 
 	d->tag = ay_connection_input_add(fd, EB_INPUT_READ, send_message_async, d);
 }
@@ -652,10 +652,10 @@ static int eb_smtp_send_im(eb_local_account *account_from,
 	strcpy(d->localhost, localhost);
 	d->from = account_from;
 	d->to = account_to;
-	d->msg = strdup(message);
+	d->msg = g_strdup(message);
 	d->tag = ay_connection_connect(fd, eb_smtp_got_connected, NULL, NULL, d);
 
-	pending_connects = l_list_append(pending_connects, (void *)d->tag);
+	pending_connects = g_list_append(pending_connects, (void *)d->tag);
 
 	return 1;
 }
@@ -663,7 +663,7 @@ static int eb_smtp_send_im(eb_local_account *account_from,
 static char *eb_smtp_check_login(const char *user, const char *pass)
 {
 	if (strchr(user, '@') == NULL) {
-		return strdup(_("SMTP logins must have @domain.tld part."));
+		return g_strdup(_("SMTP logins must have @domain.tld part."));
 	}
 	return NULL;
 }

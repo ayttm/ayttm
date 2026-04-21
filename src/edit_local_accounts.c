@@ -73,19 +73,19 @@ static void destroy(GtkWidget *widget, gpointer data)
 
 static void read_contacts()
 {
-	LList *node;
+	GList *node;
 	GtkTreeIter insert;
 
 	for (node = accounts; node; node = node->next) {
 		eb_local_account *ela = node->data;
 
-		LList *pairs = RUN_SERVICE(ela)->write_local_config(ela);
+		GList *local_pairs = RUN_SERVICE(ela)->write_local_config(ela);
 
 		gtk_list_store_append(account_list_store, &insert);
 		gtk_list_store_set(account_list_store, &insert,
 			SERVICE_TYPE, eb_services[ela->service_id].name,
-			USER_NAME, value_pair_get_value(pairs, "SCREEN_NAME"),
-			PASSWORD, value_pair_get_value(pairs, "PASSWORD"), -1);
+			USER_NAME, value_pair_get_value(local_pairs, "SCREEN_NAME"),
+			PASSWORD, value_pair_get_value(local_pairs, "PASSWORD"), -1);
 
 		if (ela->connect_at_startup)
 			gtk_list_store_set(account_list_store, &insert,
@@ -94,7 +94,7 @@ static void read_contacts()
 			gtk_list_store_set(account_list_store, &insert,
 				CONNECT, FALSE, -1);
 
-		value_pair_free(pairs);
+		value_pair_free(local_pairs);
 		num_accounts++;
 	}
 }
@@ -166,8 +166,8 @@ static gboolean selection_made_callback(GtkTreeSelection *selection,
 	gtk_entry_set_text(GTK_ENTRY(password), entry_pass);
 	{
 		int i;
-		LList *l, *list = get_service_list();
-		for (l = list, i = 0; l; l = l_list_next(l), i++) {
+		GList *l, *list = get_service_list();
+		for (l = list, i = 0; l; l = g_list_next(l), i++) {
 			char *name = l->data;
 			if (!strcmp(name, entry_service)) {
 				gtk_combo_box_set_active(GTK_COMBO_BOX
@@ -175,7 +175,7 @@ static gboolean selection_made_callback(GtkTreeSelection *selection,
 				break;
 			}
 		}
-		l_list_free(list);
+		g_list_free(list);
 
 	}
 	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(connect_at_startup),
@@ -230,14 +230,14 @@ static void remove_callback(GtkWidget *widget, gpointer data)
 
 static char *check_login_validity(const gchar *text[])
 {
-	LList *services = get_service_list();
-	LList *l = services;
+	GList *services = get_service_list();
+	GList *l = services;
 
 	if (text[USER_NAME] == NULL || strlen(text[USER_NAME]) == 0)
-		return strdup(_("Please enter an account name."));
+		return g_strdup(_("Please enter an account name."));
 
 	if (text[SERVICE_TYPE] == NULL || strlen(text[SERVICE_TYPE]) == 0)
-		return strdup(_("Please select an account type."));
+		return g_strdup(_("Please select an account type."));
 
 	while (l) {
 		if (!strcmp(l->data, text[SERVICE_TYPE]))
@@ -449,8 +449,8 @@ static void cancel_callback(GtkWidget *widget, gpointer data)
 }
 
 /* ForEach Function. Saves details of an account to a file */
-LList *pairs = NULL;
-LList *existing_accounts = NULL, *new_accounts = NULL;
+GList *pairs = NULL;
+GList *existing_accounts = NULL, *new_accounts = NULL;
 eb_local_account *ela = NULL;
 static gboolean save_accounts(GtkTreeModel *model, GtkTreePath *path,
 	GtkTreeIter *iter, gpointer data)
@@ -467,7 +467,7 @@ static gboolean save_accounts(GtkTreeModel *model, GtkTreePath *path,
 
 	id = get_service_id(service);
 	if (accounts && (ela = find_local_account_by_handle(user, id))) {
-		LList *config = NULL;
+		GList *config = NULL;
 		config = eb_services[id].sc->write_local_config(ela);
 		config = value_pair_remove(config, "SCREEN_NAME");
 		config = value_pair_add(config, "SCREEN_NAME", user);
@@ -479,9 +479,9 @@ static gboolean save_accounts(GtkTreeModel *model, GtkTreePath *path,
 		fprintf(fp, "<ACCOUNT %s>\n", service);
 		value_pair_print_values(config, fp, 1);
 		fprintf(fp, "</ACCOUNT>\n");
-		existing_accounts = l_list_append(existing_accounts, ela);
+		existing_accounts = g_list_append(existing_accounts, ela);
 	} else {
-		LList *config = NULL;
+		GList *config = NULL;
 		eb_debug(DBG_CORE,
 			"Adding new account %s service %s\n", user, service);
 		pairs = value_pair_add(NULL, "SCREEN_NAME", user);
@@ -493,7 +493,7 @@ static gboolean save_accounts(GtkTreeModel *model, GtkTreePath *path,
 			/* Is this an account for which a module is not loaded? */
 			if (ela->service_id == -1)
 				ela->service_id = id;
-			new_accounts = l_list_append(new_accounts, ela);
+			new_accounts = g_list_append(new_accounts, ela);
 			config = eb_services[id].sc->write_local_config(ela);
 			config = value_pair_remove(config, "CONNECT");
 			config = value_pair_add(config, "CONNECT",
@@ -515,7 +515,7 @@ static void ok_callback(GtkWidget *widget, gpointer data)
 {
 	FILE *fp;
 	char buff[1024];
-	LList *saved_acc_info = NULL, *acc_walk = NULL, *to_remove = NULL;
+	GList *saved_acc_info = NULL, *acc_walk = NULL, *to_remove = NULL;
 
 	if (gtk_entry_get_text(GTK_ENTRY(username)) != NULL
 		&& strlen(gtk_entry_get_text(GTK_ENTRY(username))) > 0
@@ -545,7 +545,7 @@ static void ok_callback(GtkWidget *widget, gpointer data)
 	acc_walk = accounts;
 	if (acc_walk) {
 		while (acc_walk != NULL && acc_walk->data != NULL) {
-			if (!l_list_find(existing_accounts, acc_walk->data)) {
+			if (!g_list_find(existing_accounts, acc_walk->data)) {
 				eb_local_account *removed =
 					(eb_local_account *)(acc_walk->data);
 				/* removed account */
@@ -553,21 +553,21 @@ static void ok_callback(GtkWidget *widget, gpointer data)
 					&& RUN_SERVICE(removed)->logout != NULL)
 					RUN_SERVICE(removed)->logout(removed);
 				to_remove =
-					l_list_append(to_remove,
+					g_list_append(to_remove,
 					acc_walk->data);
 			}
 			acc_walk = acc_walk->next;
 		}
 		for (acc_walk = to_remove; acc_walk && acc_walk->data;
 			acc_walk = acc_walk->next)
-			accounts = l_list_remove(accounts, acc_walk->data);
-		l_list_free(to_remove);
+			accounts = g_list_remove(accounts, acc_walk->data);
+		g_list_free(to_remove);
 	}
 
 	acc_walk = new_accounts;
 	if (acc_walk) {
 		while (acc_walk != NULL) {
-			accounts = l_list_append(accounts, acc_walk->data);
+			accounts = g_list_append(accounts, acc_walk->data);
 			acc_walk = acc_walk->next;
 		}
 	}
@@ -579,7 +579,7 @@ static void ok_callback(GtkWidget *widget, gpointer data)
 	set_menu_sensitivity();
 
 	ay_restore_account_information(saved_acc_info);
-	l_list_free(saved_acc_info);
+	g_list_free(saved_acc_info);
 }
 
 void ay_edit_local_accounts(void)
@@ -599,8 +599,8 @@ void ay_edit_local_accounts(void)
 	GtkToolItem *toolitem;
 	GtkToolItem *tool_sep;
 	GtkWidget *separator;
-	LList *list;
-	LList *l;
+	GList *list;
+	GList *l;
 
 	GtkAccelGroup *accel_group;
 	GtkCellRenderer *renderer;
@@ -692,11 +692,11 @@ void ay_edit_local_accounts(void)
 	service_type = gtk_combo_box_new_text();
 
 	list = get_service_list();
-	for (l = list; l; l = l_list_next(l)) {
+	for (l = list; l; l = g_list_next(l)) {
 		char *label = l->data;
 		gtk_combo_box_append_text(GTK_COMBO_BOX(service_type), label);
 	}
-	l_list_free(list);
+	g_list_free(list);
 
 	gtk_widget_show(service_type);
 

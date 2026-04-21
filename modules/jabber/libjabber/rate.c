@@ -40,6 +40,7 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
+#include <glib.h>
 
 jlimit jlimit_new(int maxt, int maxp)
 {
@@ -61,7 +62,7 @@ void jlimit_free(jlimit r)
 {
 	if (r != NULL) {
 		if (r->key != NULL)
-			free(r->key);
+			g_free(r->key);
 		pool_free(r->p);
 	}
 }
@@ -75,11 +76,11 @@ int jlimit_check(jlimit r, char *key, int points)
 
 	/* make sure we didn't go over the time frame or get a null/new key */
 	if ((now - r->start) > r->maxt || key == NULL || j_strcmp(key, r->key) != 0) {	/* start a new key */
-		free(r->key);
+		g_free(r->key);
 		if (key != NULL)
 			/* We use strdup instead of pstrdup since r->key needs to be free'd before 
 			   and more often than the rest of the rlimit structure */
-			r->key = strdup(key);
+			r->key = g_strdup(key);
 		else
 			r->key = NULL;
 		r->start = now;

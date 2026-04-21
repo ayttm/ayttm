@@ -76,7 +76,7 @@ static void console_session_get_command(void *data, int source,
 		}
 
 		ret = send_url(message);
-		write(source, &ret, sizeof(int));
+		(void)write(source, &ret, sizeof(int));
 		return;
 	} else if (strcmp(contact_name, "focus-ayttm")) {
 		if (read(source, &len, sizeof(short)) <= 0) {
@@ -92,7 +92,7 @@ static void console_session_get_command(void *data, int source,
 		remote_contact = find_contact_by_nick(contact_name);
 		if (!remote_contact) {
 			ret = -1;
-			write(source, &ret, sizeof(int));
+			(void)write(source, &ret, sizeof(int));
 			return;
 		}
 		ay_conversation_chat_with_contact(remote_contact);
@@ -102,7 +102,7 @@ static void console_session_get_command(void *data, int source,
 			remote_contact->conversation->contact);
 		if (!remote_contact->conversation->preferred) {
 			ret = -2;
-			write(source, &ret, sizeof(int));
+			(void)write(source, &ret, sizeof(int));
 			return;
 		}
 
@@ -114,7 +114,7 @@ static void console_session_get_command(void *data, int source,
 	}
 
 	ret = 0;
-	write(source, &ret, sizeof(int));
+	(void)write(source, &ret, sizeof(int));
 
 }
 

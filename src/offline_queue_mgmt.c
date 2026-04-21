@@ -191,9 +191,8 @@ int contact_mgmt_flush(eb_local_account *ela)
 				   automatically re-added our deleted 
 				   account */
 				if (ea_recreated) {
-					if (l_list_singleton(ea->
-							account_contact->
-							accounts))
+					GList *_accts = ea->account_contact->accounts;
+					if (_accts != NULL && _accts->next == NULL)
 						remove_contact(ea->
 							account_contact);
 					else

@@ -40,13 +40,14 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
+#include <glib.h>
 
 char *j_strdup(const char *str)
 {
 	if (str == NULL)
 		return NULL;
 	else
-		return strdup(str);
+		return g_strdup(str);
 }
 
 char *j_strcat(char *dest, char *txt)

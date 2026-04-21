@@ -20,6 +20,7 @@ Contributor(s):
 */
 
 #include "xmldef.h"
+#include <glib.h>
 
 #ifdef XML_UNICODE_WCHAR_T
 #ifndef XML_UNICODE
@@ -86,7 +87,7 @@ NAMED *lookup(HASH_TABLE *table, KEY name, size_t createSize)
 						newSize - 1 : --j) ;
 					newV[j] = table->v[i];
 				}
-			free(table->v);
+			g_free(table->v);
 			table->v = newV;
 			table->size = newSize;
 			table->usedLim = newSize / 2;
@@ -109,9 +110,9 @@ void hashTableDestroy(HASH_TABLE *table)
 	for (i = 0; i < table->size; i++) {
 		NAMED *p = table->v[i];
 		if (p)
-			free(p);
+			g_free(p);
 	}
-	free(table->v);
+	g_free(table->v);
 }
 
 void hashTableInit(HASH_TABLE *p)

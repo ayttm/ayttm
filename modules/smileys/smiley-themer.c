@@ -63,7 +63,7 @@ static int do_smiley_debug = 0;
 static char rcfilename[] = "aysmile.rc";
 
 #ifndef FREE
-# define FREE(x) if(x){free(x); x=NULL;}
+# define FREE(x) if(x){g_free(x); x=NULL;}
 #endif
 
 /*  Module Exports */
@@ -178,13 +178,13 @@ struct smiley_theme {
 	char *date;
 	char *revision;
 
-	LList *smileys;
+	GList *smileys;
 	void *menu_tag;
 
 	int core;
 };
 
-static LList *themes = NULL;
+static GList *themes = NULL;
 
 static void unload_theme(struct smiley_theme *theme)
 {
@@ -209,7 +209,7 @@ static void unload_theme(struct smiley_theme *theme)
 		FREE(smiley->service);
 		FREE(smiley);
 		theme->smileys =
-			l_list_remove_link(theme->smileys, theme->smileys);
+			g_list_remove_link(theme->smileys, theme->smileys);
 	}
 
 	FREE(theme->name);
@@ -226,7 +226,7 @@ static void unload_themes()
 	while (themes) {
 		struct smiley_theme *theme = themes->data;
 		unload_theme(theme);
-		themes = l_list_remove_link(themes, themes);
+		themes = g_list_remove_link(themes, themes);
 	}
 }
 
@@ -328,18 +328,18 @@ static struct smiley_theme *load_theme(const char *theme_name)
 		if (key[0] == '%') {
 			key++;
 			if (!strcmp(key, "name"))
-				theme->name = strdup(value);
+				theme->name = g_strdup(value);
 			else if (!strcmp(key, "desc"))
-				theme->description = strdup(value);
+				theme->description = g_strdup(value);
 			else if (!strcmp(key, "author"))
-				theme->author = strdup(value);
+				theme->author = g_strdup(value);
 			else if (!strcmp(key, "date"))
-				theme->date = strdup(value);
+				theme->date = g_strdup(value);
 			else if (!strcmp(key, "revision"))
-				theme->revision = strdup(value);
+				theme->revision = g_strdup(value);
 			else if (!strcmp(key, "protocol")) {
 				FREE(curr_protocol);
-				curr_protocol = strdup(value);
+				curr_protocol = g_strdup(value);
 			}
 		} else {
 			snprintf(filepath, sizeof(filepath), "%s/%s/%s",
@@ -365,7 +365,7 @@ static struct smiley_theme *load_theme(const char *theme_name)
 	}
 
 	if (!theme->name)
-		theme->name = strdup(theme_name);
+		theme->name = g_strdup(theme_name);
 
 	return theme;
 }
@@ -409,9 +409,9 @@ static void load_themes()
 	if (!theme->menu_tag) {
 		eb_debug(DBG_MOD,
 			"Error!  Unable to add Smiley menu to smiley menu\n");
-		free(theme);
+		g_free(theme);
 	} else
-		themes = l_list_prepend(themes, theme);
+		themes = g_list_prepend(themes, theme);
 
 	while ((entry = readdir(theme_dir))) {
 		if (entry->d_name[0] == '.')
@@ -434,7 +434,7 @@ static void load_themes()
 
 		ay_add_smiley_set(theme->name, theme->smileys);
 
-		themes = l_list_prepend(themes, theme);
+		themes = g_list_prepend(themes, theme);
 	}
 
 	closedir(theme_dir);
@@ -442,8 +442,8 @@ static void load_themes()
 
 static void activate_theme_by_name(const char *name)
 {
-	LList *l;
-	for (l = themes; l; l = l_list_next(l)) {
+	GList *l;
+	for (l = themes; l; l = g_list_next(l)) {
 		struct smiley_theme *theme = l->data;
 		if (!strcmp(theme->name, name)) {
 			enable_smileys((ebmCallbackData *)theme);

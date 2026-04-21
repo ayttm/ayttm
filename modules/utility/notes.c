@@ -108,8 +108,7 @@ static void rename_notes(char *onick, char *nnick)
 
 static int plugin_init()
 {
-	input_list *il = calloc(1, sizeof(input_list));
-	int result = 0;
+	input_list *il = g_new0(input_list, 1);
 
 	eb_debug(DBG_MOD, "notes init\n");
 	notes_tag1 =
@@ -124,7 +123,7 @@ static int plugin_init()
 		eb_add_menu_item("Notes", EB_CONTACT_MENU, notes_feature,
 		ebmCONTACTDATA, NULL);
 	if (!notes_tag2) {
-		result = eb_remove_menu_item(EB_CHAT_WINDOW_MENU, notes_tag1);
+		(void)eb_remove_menu_item(EB_CHAT_WINDOW_MENU, notes_tag1);
 		eb_debug(DBG_MOD,
 			"Error!  Unable to add Notes menu to contact menu\n");
 		return (-1);
@@ -138,7 +137,7 @@ static int plugin_init()
 	il->label = _("Notes Editor:");
 	il->type = EB_INPUT_ENTRY;
 	/* 929347 */
-	nick_modify_utility = l_list_append(nick_modify_utility, &rename_notes);
+	nick_modify_utility = g_list_append(nick_modify_utility, &rename_notes);
 	return (0);
 }
 
@@ -148,7 +147,7 @@ static int plugin_finish()
 
 	while (plugin_info.prefs) {
 		input_list *il = plugin_info.prefs->next;
-		free(plugin_info.prefs);
+		g_free(plugin_info.prefs);
 		plugin_info.prefs = il;
 	}
 
@@ -165,7 +164,7 @@ static int plugin_finish()
 		return (-1);
 	}
 	/* 929347 */
-	nick_modify_utility = l_list_remove(nick_modify_utility, &rename_notes);
+	nick_modify_utility = g_list_remove(nick_modify_utility, &rename_notes);
 	return (0);
 }
 
@@ -200,14 +199,13 @@ static void notes_feature(ebmCallbackData *data)
 	pid = fork();
 	if (pid == 0) {
 		char *args[3];
-		int e;
 
-		args[0] = strdup(plugin_info.prefs->widget.entry.value);
-		args[1] = strdup(cmd_buff);
+		args[0] = g_strdup(plugin_info.prefs->widget.entry.value);
+		args[1] = g_strdup(cmd_buff);
 		args[2] = NULL;
-		e = execvp(args[0], args);
-		free(args[0]);
-		free(args[1]);
+		(void)execvp(args[0], args);
+		g_free(args[0]);
+		g_free(args[1]);
 		_exit(0);
 	}
 #endif

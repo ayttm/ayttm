@@ -21,6 +21,7 @@ Contributor(s):
 
 #include "xmldef.h"
 #include "xmlparse.h"
+#include <glib.h>
 
 #ifdef XML_UNICODE
 #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
@@ -396,7 +397,7 @@ Parser *asParser(XML_Parser parser)
 
 XML_Parser XML_ParserCreate(const XML_Char *encodingName)
 {
-	XML_Parser parser = malloc(sizeof(Parser));
+	XML_Parser parser = g_malloc(sizeof(Parser));
 	if (!parser)
 		return parser;
 	processor = prologInitProcessor;
@@ -442,9 +443,9 @@ XML_Parser XML_ParserCreate(const XML_Char *encodingName)
 	freeBindingList = 0;
 	inheritedBindings = 0;
 	attsSize = INIT_ATTS_SIZE;
-	atts = malloc(attsSize * sizeof(ATTRIBUTE));
+	atts = g_malloc(attsSize * sizeof(ATTRIBUTE));
 	nSpecifiedAtts = 0;
-	dataBuf = malloc(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
+	dataBuf = g_malloc(INIT_DATA_BUF_SIZE * sizeof(XML_Char));
 	groupSize = 0;
 	groupConnector = 0;
 	hadExternalDoctype = 0;
@@ -580,8 +581,8 @@ void destroyBindings(BINDING *bindings)
 		if (!b)
 			break;
 		bindings = b->nextTagBinding;
-		free(b->uri);
-		free(b);
+		g_free(b->uri);
+		g_free(b);
 	}
 }
 
@@ -597,23 +598,23 @@ void XML_ParserFree(XML_Parser parser)
 		}
 		p = tagStack;
 		tagStack = tagStack->parent;
-		free(p->buf);
+		g_free(p->buf);
 		destroyBindings(p->bindings);
-		free(p);
+		g_free(p);
 	}
 	destroyBindings(freeBindingList);
 	destroyBindings(inheritedBindings);
 	poolDestroy(&tempPool);
 	poolDestroy(&temp2Pool);
 	dtdDestroy(&dtd);
-	free((void *)atts);
-	free(groupConnector);
-	free(buffer);
-	free(dataBuf);
-	free(unknownEncodingMem);
+	g_free((void *)atts);
+	g_free(groupConnector);
+	g_free(buffer);
+	g_free(dataBuf);
+	g_free(unknownEncodingMem);
 	if (unknownEncodingRelease)
 		unknownEncodingRelease(unknownEncodingData);
-	free(parser);
+	g_free(parser);
 }
 
 void XML_UseParserAsHandlerArg(XML_Parser parser)
@@ -776,7 +777,7 @@ int XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
 			if (buffer == 0 || nLeftOver > bufferLim - buffer) {
 				/* FIXME avoid integer overflow */
 				buffer = buffer ==
-					0 ? malloc(len * 2) : realloc(buffer,
+					0 ? g_malloc(len * 2) : realloc(buffer,
 					len * 2);
 				if (!buffer) {
 					errorCode = XML_ERROR_NO_MEMORY;
@@ -832,7 +833,7 @@ void *XML_GetBuffer(XML_Parser parser, int len)
 			do {
 				bufferSize *= 2;
 			} while (bufferSize < neededSize);
-			newBuf = malloc(bufferSize);
+			newBuf = g_malloc(bufferSize);
 			if (newBuf == 0) {
 				errorCode = XML_ERROR_NO_MEMORY;
 				return 0;
@@ -841,7 +842,7 @@ void *XML_GetBuffer(XML_Parser parser, int len)
 			if (bufferPtr) {
 				memcpy(newBuf, bufferPtr,
 					bufferEnd - bufferPtr);
-				free(buffer);
+				g_free(buffer);
 			}
 			bufferEnd = newBuf + (bufferEnd - bufferPtr);
 			bufferPtr = buffer = newBuf;
@@ -1195,10 +1196,10 @@ doContent(XML_Parser parser,
 					tag = freeTagList;
 					freeTagList = freeTagList->parent;
 				} else {
-					tag = malloc(sizeof(TAG));
+					tag = g_malloc(sizeof(TAG));
 					if (!tag)
 						return XML_ERROR_NO_MEMORY;
-					tag->buf = malloc(INIT_TAG_BUF_SIZE);
+					tag->buf = g_malloc(INIT_TAG_BUF_SIZE);
 					if (!tag->buf)
 						return XML_ERROR_NO_MEMORY;
 					tag->bufEnd =
@@ -1745,12 +1746,12 @@ int addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
 		}
 		freeBindingList = b->nextTagBinding;
 	} else {
-		b = malloc(sizeof(BINDING));
+		b = g_malloc(sizeof(BINDING));
 		if (!b)
 			return 0;
-		b->uri = malloc(sizeof(XML_Char) * len + EXPAND_SPARE);
+		b->uri = g_malloc(sizeof(XML_Char) * len + EXPAND_SPARE);
 		if (!b->uri) {
-			free(b);
+			g_free(b);
 			return 0;
 		}
 		b->uriAlloc = len;
@@ -1976,7 +1977,7 @@ handleUnknownEncoding(XML_Parser parser, const XML_Char *encodingName)
 		if (unknownEncodingHandler(unknownEncodingHandlerData,
 				encodingName, &info)) {
 			ENCODING *enc;
-			unknownEncodingMem = malloc(XmlSizeOfUnknownEncoding());
+			unknownEncodingMem = g_malloc(XmlSizeOfUnknownEncoding());
 			if (!unknownEncodingMem) {
 				if (info.release)
 					info.release(info.data);
@@ -2280,7 +2281,7 @@ prologProcessor(XML_Parser parser,
 						realloc(groupConnector,
 						groupSize *= 2);
 				else
-					groupConnector = malloc(groupSize = 32);
+					groupConnector = g_malloc(groupSize = 32);
 				if (!groupConnector)
 					return XML_ERROR_NO_MEMORY;
 			}
@@ -2723,7 +2724,7 @@ defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *attId, int isCdata,
 		if (type->allocDefaultAtts == 0) {
 			type->allocDefaultAtts = 8;
 			type->defaultAtts =
-				malloc(type->allocDefaultAtts *
+				g_malloc(type->allocDefaultAtts *
 				sizeof(DEFAULT_ATTRIBUTE));
 		} else {
 			type->allocDefaultAtts *= 2;
@@ -3008,7 +3009,7 @@ static void dtdDestroy(DTD *p)
 		if (!e)
 			break;
 		if (e->allocDefaultAtts != 0)
-			free(e->defaultAtts);
+			g_free(e->defaultAtts);
 	}
 	hashTableDestroy(&(p->generalEntities));
 	hashTableDestroy(&(p->elementTypes));
@@ -3103,7 +3104,7 @@ static int dtdCopy(DTD *newDtd, const DTD *oldDtd)
 			return 0;
 		if (oldE->nDefaultAtts) {
 			newE->defaultAtts =
-				(DEFAULT_ATTRIBUTE *)malloc(oldE->nDefaultAtts *
+				(DEFAULT_ATTRIBUTE *)g_malloc(oldE->nDefaultAtts *
 				sizeof(DEFAULT_ATTRIBUTE));
 			if (!newE->defaultAtts)
 				return 0;
@@ -3222,14 +3223,14 @@ void poolDestroy(STRING_POOL *pool)
 	BLOCK *p = pool->blocks;
 	while (p) {
 		BLOCK *tem = p->next;
-		free(p);
+		g_free(p);
 		p = tem;
 	}
 	pool->blocks = 0;
 	p = pool->freeBlocks;
 	while (p) {
 		BLOCK *tem = p->next;
-		free(p);
+		g_free(p);
 		p = tem;
 	}
 	pool->freeBlocks = 0;
@@ -3337,7 +3338,7 @@ int poolGrow(STRING_POOL *pool)
 			blockSize = INIT_BLOCK_SIZE;
 		else
 			blockSize *= 2;
-		tem = malloc(offsetof(BLOCK, s) + blockSize * sizeof(XML_Char));
+		tem = g_malloc(offsetof(BLOCK, s) + blockSize * sizeof(XML_Char));
 		if (!tem)
 			return 0;
 		tem->size = blockSize;

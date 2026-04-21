@@ -33,10 +33,10 @@ extern GtkWidget *statuswindow;
 
 void show_manual()
 {
-	open_url(statuswindow->window, "http://ayttm.sf.net/ayttm-manual/");
+	open_url(statuswindow->window, "https://ayttm.sf.net/ayttm-manual/");
 }
 
 void show_website()
 {
-	open_url(statuswindow->window, "http://ayttm.sf.net/");
+	open_url(statuswindow->window, "https://ayttm.sf.net/");
 }

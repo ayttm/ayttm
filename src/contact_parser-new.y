@@ -21,7 +21,7 @@
 %}
 
 %union {
-	LList *vals;
+	GList *vals;
 	value_pair *val;
 	grouplist *grp;
 	char *string;
@@ -49,7 +49,7 @@ start:
 ;
 
 group_list:
-		group_list group { $$ = l_list_prepend( $1, $2 ); }
+		group_list group { $$ = g_list_prepend( $1, $2 ); }
 	|	EPSILON { $$ = 0; }
 ;
 
@@ -69,7 +69,7 @@ group:
 ;
 
 contact_list:
-		contact_list contact { $$ = l_list_insert_sorted( $1, $2, contact_cmp ); }
+		contact_list contact { $$ = g_list_insert_sorted( $1, $2, (GCompareFunc)contact_cmp ); }
 	|	EPSILON { $$ = 0; }
 ;
 
@@ -117,7 +117,7 @@ contact:
 ;	
 
 account_list:
-	 	account_list account { $$ = l_list_insert_sorted( $1, $2, account_cmp ); }
+		account_list account { $$ = g_list_insert_sorted( $1, $2, (GCompareFunc)account_cmp ); }
 	 |	EPSILON { $$ = 0; }
 
 ;
@@ -153,7 +153,7 @@ account:
 ;
 
 value_list:
-		value_list key_pair { $$ = l_list_prepend( $1, $2 ); }
+		value_list key_pair { $$ = g_list_prepend( $1, $2 ); }
 	|	EPSILON { $$ = 0; }
 
 ;

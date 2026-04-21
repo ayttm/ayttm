@@ -126,9 +126,10 @@ char *get_licq_nick(const char *uin, int licq_version)
 		return NULL;
 
 	while (!feof(fp)) {
-		fgets(c, 1024, fp);
+		if (!fgets(c, 1024, fp))
+			break;
 		token = remove_spaces(strtok(c, "="));
-		if (g_strcasecmp(token, "Alias"))
+		if (g_ascii_strcasecmp(token, "Alias"))
 			continue;
 
 		nick = remove_spaces(strtok(NULL, "="));
@@ -173,9 +174,10 @@ void import_licq_accounts(ebmCallbackData *data)
 	}
 
 	while (!feof(fp)) {
-		fgets(c, 1024, fp);
+		if (!fgets(c, 1024, fp))
+			break;
 		token = remove_spaces(c);
-		if (!g_strcasecmp(token, "[users]"))
+		if (!g_ascii_strcasecmp(token, "[users]"))
 			break;
 	}
 	if (feof(fp)) {
@@ -186,9 +188,10 @@ void import_licq_accounts(ebmCallbackData *data)
 	}
 
 	while (!feof(fp)) {
-		fgets(c, 1024, fp);
+		if (!fgets(c, 1024, fp))
+			break;
 		token = remove_spaces(strtok(c, "="));
-		if (!g_strncasecmp(token, "NumOfUsers",
+		if (!g_ascii_strncasecmp(token, "NumOfUsers",
 				strlen("NumOfUsers") + 1))
 			break;
 	}
@@ -212,7 +215,8 @@ void import_licq_accounts(ebmCallbackData *data)
 		add_group(group_name);
 
 	while (!feof(fp)) {
-		fgets(c, 1024, fp);
+		if (!fgets(c, 1024, fp))
+			break;
 		if (feof(fp))
 			break;
 		token = strtok(c, "=");

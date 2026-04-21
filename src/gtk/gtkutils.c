@@ -90,7 +90,6 @@ GtkWidget *gtkut_create_icon_button(const char *inLabel, const char **inXPM,
 	GtkWidget *label = NULL;
 	GtkWidget *hbox = NULL;
 	GtkWidget *iconwid = NULL;
-	GtkStyle *style = NULL;
 	const int min_width = 80;
 	int width = min_width;
 	int height = -1;
@@ -100,8 +99,6 @@ GtkWidget *gtkut_create_icon_button(const char *inLabel, const char **inXPM,
 		hbox = gtk_hbox_new(FALSE, 0);
 		gtk_widget_show(hbox);
 	}
-
-	style = gtk_widget_get_style(inParent);
 
 	iconwid = gtkut_create_icon_widget(inXPM, inParent);
 	height = gdk_pixbuf_get_height(gtk_image_get_pixbuf(GTK_IMAGE(iconwid)))

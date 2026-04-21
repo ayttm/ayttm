@@ -65,12 +65,12 @@
 #define NAME_MAX 4096
 #endif
 
-LList *outgoing_message_filters = NULL;
-LList *incoming_message_filters = NULL;
-LList *outgoing_message_filters_remote = NULL;
-LList *outgoing_message_filters_local = NULL;
+GList *outgoing_message_filters = NULL;
+GList *incoming_message_filters = NULL;
+GList *outgoing_message_filters_remote = NULL;
+GList *outgoing_message_filters_local = NULL;
 
-static LList *conversation_list = NULL;
+static GList *conversation_list = NULL;
 
 static const int nb_cr_colors = 9;
 
@@ -85,7 +85,7 @@ void ay_conversation_fellows_append(Conversation *conv, const char *alias,
 
 	conv->num_fellows++;
 
-	conv->fellows = l_list_append(conv->fellows, fellow);
+	conv->fellows = g_list_append(conv->fellows, fellow);
 
 	ay_chat_window_fellows_append(conv->window, fellow);
 }
@@ -117,7 +117,7 @@ void ay_conversation_buddy_leave_ex(Conversation *conv, const char *handle,
 	const char *message)
 {
 	char buf[1024];
-	LList *l = conv->fellows;
+	GList *l = conv->fellows;
 	ConversationFellow *fellow = NULL;
 
 	while (l) {
@@ -127,7 +127,7 @@ void ay_conversation_buddy_leave_ex(Conversation *conv, const char *handle,
 			ay_chat_window_fellows_remove(conv->window, fellow);
 			break;
 		}
-		l = l_list_next(l);
+		l = g_list_next(l);
 	}
 
 	if (!fellow) {
@@ -148,7 +148,7 @@ void ay_conversation_buddy_chnick(Conversation *conv, const char *handle,
 	const char *newalias)
 {
 	char buf[1024];
-	LList *l = conv->fellows;
+	GList *l = conv->fellows;
 	ConversationFellow *fellow = NULL;
 	char *oldalias = NULL;
 
@@ -156,12 +156,12 @@ void ay_conversation_buddy_chnick(Conversation *conv, const char *handle,
 		fellow = l->data;
 
 		if (!strcmp(fellow->handle, handle)) {
-			oldalias = strdup(fellow->alias);
-			strcpy(fellow->alias, newalias);
+			oldalias = g_strdup(fellow->alias);
+			g_strlcpy(fellow->alias, newalias, sizeof(fellow->alias));
 			ay_chat_window_fellows_rename(conv->window, fellow);
 			break;
 		}
-		l = l_list_next(l);
+		l = g_list_next(l);
 	}
 
 	if (!fellow) {
@@ -176,18 +176,18 @@ void ay_conversation_buddy_chnick(Conversation *conv, const char *handle,
 	ay_conversation_display_notification(conv, buf,
 		CHAT_NOTIFICATION_JOIN);
 	
-	free(oldalias);
+	g_free(oldalias);
 }
 
 int ay_conversation_buddy_connected(Conversation *conv, const char *alias)
 {
-	LList *l = conv->fellows;
+	GList *l = conv->fellows;
 	while (l) {
 		ConversationFellow *fellow = l->data;
 
 		if (!strcmp(alias, fellow->alias))
 			return 1;
-		l = l_list_next(l);
+		l = g_list_next(l);
 	}
 
 	return 0;
@@ -201,7 +201,7 @@ void ay_conversation_send_message(Conversation *conv, char *text)
 	gchar *message;
 	struct tm *cur_time;
 	time_t t;
-	LList *filter_walk;
+	GList *filter_walk;
 #ifdef __MINGW32__
 	char *recoded;
 #endif
@@ -252,19 +252,19 @@ void ay_conversation_send_message(Conversation *conv, char *text)
 	}
 
 	if (conv->this_msg_in_history) {
-		LList *node = NULL, *node2 = NULL;
+		GList *node = NULL, *node2 = NULL;
 
 		for (node = conv->history; node; node = node->next)
 			node2 = node;
-		free(node2->data);
-		node2->data = strdup(text);
+		g_free(node2->data);
+		node2->data = g_strdup(text);
 		conv->this_msg_in_history = 0;
 	} else {
-		conv->history = l_list_append(conv->history, strdup(text));
+		conv->history = g_list_append(conv->history, g_strdup(text));
 		conv->hist_pos = NULL;
 	}
 
-	message = strdup(text);
+	message = g_strdup(text);
 
 	/* remote filters */
 	for (filter_walk = outgoing_message_filters_remote; filter_walk;
@@ -274,7 +274,7 @@ void ay_conversation_send_message(Conversation *conv, char *text)
 		ifilter = filter_walk->data;
 
 		o_text = ifilter(conv, text);
-		free(text);
+		g_free(text);
 		text = o_text;
 
 		if (!text)
@@ -292,7 +292,7 @@ void ay_conversation_send_message(Conversation *conv, char *text)
 		ifilter = filter_walk->data;
 
 		o_text = ifilter(conv, message);
-		free(message);
+		g_free(message);
 		message = o_text;
 
 		if (!message)
@@ -433,11 +433,10 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 				 const gchar *o_message)
 {
 	struct contact *remote_contact = conv->contact;
-	eb_account *remote = NULL;
-	gchar buff[BUF_SIZE], buff2[BUF_SIZE];
+	gchar buff[BUF_SIZE], buff2[BUF_SIZE + 64];
 	struct tm *cur_time;
 	time_t t;
-	LList *filter_walk;
+	GList *filter_walk;
 	gchar *message;
 	int i = 0;
 	char *outmsg = NULL;
@@ -454,7 +453,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 	/* We need to check do the filters and groups only for individuals */
 	if (!conv->is_room) {
 		char *group_name;
-		remote = find_suitable_remote_account(conv->preferred,
+		(void)find_suitable_remote_account(conv->preferred,
 			conv->contact);
 
 		if (remote_contact && remote_contact->group
@@ -477,7 +476,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 	}
 
 	/* Inbound filters here - Meredydd */
-	message = strdup(o_message);
+	message = g_strdup(o_message);
 
 	for (filter_walk = incoming_message_filters; filter_walk;
 		filter_walk = filter_walk->next) {
@@ -488,7 +487,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 		ofilter = filter_walk->data;
 
 		otext = ofilter(conv, message);
-		free(message);
+		g_free(message);
 		message = otext;
 		if (!message)
 			return;
@@ -504,7 +503,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 		if (!strcmp(from, conv->local_user->handle))
 			color = "#0000ff";
 		else
-			color = RUN_SERVICE(conv->local_user)->get_color();	/* note do not free() afterwards, may be static */
+			color = RUN_SERVICE(conv->local_user)->get_color();	/* note do not g_free() afterwards, may be static */
 
 		time(&t);
 		cur_time = localtime(&t);
@@ -576,7 +575,7 @@ void ay_conversation_got_message(Conversation *conv, const gchar *from,
 static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 {
 	FILE *fp;
-	gchar buff[1024], buff2[1024], *buff3, color[8], name[512], *token;
+	gchar buff[1024], buff2[1088], *buff3, color[8], name[512], *token;
 	long location = -1;
 	long lastlocation = -1;
 	long beforeget;
@@ -588,7 +587,7 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 	/* find last conversation */
 	while (!feof(fp)) {
 		beforeget = ftell(fp);
-		fgets(buff, 1024, fp);
+		(void)fgets(buff, 1024, fp);
 		if (feof(fp))
 			break;
 		g_strchomp(buff);
@@ -624,7 +623,7 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 
 	/* now we display the log */
 	while (!feof(fp)) {
-		fgets(buff, 1024, fp);
+		(void)fgets(buff, 1024, fp);
 		if (feof(fp))
 			break;
 
@@ -634,13 +633,13 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 			ay_chat_window_print(conv->window, buff2);
 		else if (!strncmp(buff, _("Conversation started"),
 				strlen(_("Conversation started")))) {
-			snprintf(buff2, 1024,
+			snprintf(buff2, sizeof(buff2),
 				"<body bgcolor=#F9E589 width=*><b> %s</b></body>",
 				buff);
 			ay_chat_window_print(conv->window, buff2);
 		} else if (!strncmp(buff, _("Conversation ended"),
 				strlen(_("Conversation ended")))) {
-			snprintf(buff2, 1024,
+			snprintf(buff2, sizeof(buff2),
 				"<body bgcolor=#F9E589 width=*><b> %s</b></body>",
 				buff);
 			ay_chat_window_print(conv->window, buff2);
@@ -686,9 +685,9 @@ static void eb_restore_last_conv(gchar *file_name, Conversation *conv)
 				}
 				if (!strncmp(token, conv->contact->nick,
 						strlen(conv->contact->nick)))
-					strcpy(color, "#ff0000");
+					g_strlcpy(color, "#ff0000", sizeof(color));
 				else
-					strcpy(color, "#0000ff");
+					g_strlcpy(color, "#0000ff", sizeof(color));
 
 				strncpy(name, buff, buff3 - buff2);
 				name[buff3 - buff2] = '\0';
@@ -737,10 +736,10 @@ void ay_conversation_chat_with_contact(struct contact *remote_contact)
 					remote_contact->conversation);
 			}
 			conversation_list =
-				l_list_append(conversation_list,
+				g_list_append(conversation_list,
 				remote_contact->conversation);
 			/* init preferred if no choice */
-			if (l_list_length(remote_contact->accounts) == 1
+			if (g_list_length(remote_contact->accounts) == 1
 				&& remote_account) {
 				remote_contact->conversation->preferred =
 					remote_account;
@@ -861,10 +860,10 @@ Conversation *ay_conversation_new(eb_local_account *local, struct contact *remot
 	ret->local_user = local;
 
 	if (name && *name)
-		ret->name = strdup(name);
+		ret->name = g_strdup(name);
 	else {
 		gen_conversation_name(buff);
-		ret->name = strdup(buff);
+		ret->name = g_strdup(buff);
 	}
 
 	if (remote)
@@ -884,15 +883,15 @@ Conversation *ay_conversation_new(eb_local_account *local, struct contact *remot
 
 void ay_conversation_rename(Conversation *conv, char *new_name)
 {
-	free(conv->name);
-	conv->name = strdup(new_name);
+	g_free(conv->name);
+	conv->name = g_strdup(new_name);
 
 	ay_chat_window_set_name(conv->window);
 }
 
 void ay_conversation_end(Conversation *conv)
 {
-	LList *node, *node2;
+	GList *node, *node2;
 
 	/* 
 	 * Some protocols like MSN and jabber require that something
@@ -915,11 +914,11 @@ void ay_conversation_end(Conversation *conv)
 		RUN_SERVICE(conv->local_user)->leave_chat_room(conv);
 
 	for (node2 = conv->history; node2; node2 = node2->next) {
-		free(node2->data);
+		g_free(node2->data);
 		node2->data = NULL;
 	}
 
-	l_list_free(conv->history);
+	g_list_free(conv->history);
 
 	/* 
 	 * if we are logging conversations, time stamp when the conversation
@@ -999,7 +998,7 @@ void ay_conversation_set_encoding(const char *value, void *data)
 
 Conversation *ay_conversation_find_by_name(eb_local_account *ela, const char *name)
 {
-	LList *l = chat_window_list;
+	GList *l = chat_window_list;
 
 	while (l) {
 		chat_window *cw = l->data;
@@ -1007,7 +1006,7 @@ Conversation *ay_conversation_find_by_name(eb_local_account *ela, const char *na
 		if (cw->conv->local_user == ela && !strcmp(cw->conv->name, name))
 			return cw->conv;
 
-		l = l_list_next(l);
+		l = g_list_next(l);
 	}
 
 	return NULL;
@@ -1017,7 +1016,7 @@ void ay_conversation_invite_fellow(Conversation *conv, const char *fellow,
 	const char *message)
 {
 	RUN_SERVICE(conv->local_user)->send_invite(conv->local_user, conv,
-		fellow, message);
+		(char *)fellow, message);
 }
 
 /* Autoreconnect conversations */

@@ -45,7 +45,7 @@ static void ay_do_message(const char *inTitle, const char *inMessage,
 	}
 
 	dialog = gtk_message_dialog_new_with_markup(NULL, flags, mtype,
-		GTK_BUTTONS_OK, inMessage);
+		GTK_BUTTONS_OK, "%s", inMessage);
 	gtk_window_set_title(GTK_WINDOW(dialog), inTitle);
 	gtk_widget_show(dialog);
 

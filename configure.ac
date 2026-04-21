@@ -113,7 +113,8 @@ AC_CHECK_HEADERS([alloca.h argz.h arpa/inet.h malloc.h netdb.h netinet/in.h path
 AC_CHECK_HEADERS([sys/utsname.h])
 
 #Checking for enchant
-PKG_CHECK_MODULES([ENCHANT], [enchant], [AC_DEFINE(HAVE_LIBENCHANT, , Define if we use enchant)], [])
+PKG_CHECK_MODULES([ENCHANT], [enchant-2], [AC_DEFINE(HAVE_LIBENCHANT, , Define if we use enchant)],
+  [AC_MSG_WARN([enchant-2 not found -- spell checking will be disabled])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_PID_T
@@ -283,6 +284,14 @@ AC_TRY_LINK([#include <openssl/opensslv.h>],
     [have_openssl=yes], [have_openssl=no])
 
 if test "$have_openssl" = yes; then
+	AC_MSG_CHECKING([for OpenSSL >= 1.1.1])
+	AC_TRY_COMPILE([#include <openssl/opensslv.h>
+		#if OPENSSL_VERSION_NUMBER < 0x1010100fL
+		#  error "too old"
+		#endif], [],
+		[AC_MSG_RESULT([yes])],
+		[AC_MSG_RESULT([no])
+		 AC_MSG_ERROR([OpenSSL >= 1.1.1 is required (TLS 1.3 support needs 1.1.1+)])])
 	EB_LIBS="$EB_LIBS $SSL_LIBDIR -lssl -lcrypto"
 	EB_CFLAGS="$EB_CFLAGS $SSL_INCLUDES"
 	AC_DEFINE(HAVE_OPENSSL, 1, [Define if you have openssl])
@@ -296,9 +305,6 @@ fi
 
 LIBS=$ac_check_lib_save_LIBS 
 CFLAGS=$ac_check_lib_save_CFLAGS
-
-# Check for libyahoo2
-AC_CHECK_LIB(yahoo2, yahoo_init,, [enable_yahoo="no"];AC_MSG_WARN([libyahoo2 is not installed. Yahoo protocol module will not be built]))
 
 GTK_CFLAGS="$GTK_CFLAGS" # -DGTK_DISABLE_DEPRECATED"
 EB_CFLAGS="$EB_CFLAGS $GLIB_CFLAGS $GTK_CFLAGS"
@@ -360,60 +366,19 @@ EB_LIBS="$EB_LIBS $X_LIBS"
 # Begin Optional Modules
 ###########################################################################
 
-AC_ARG_ENABLE(oscar, AC_HELP_STRING([--disable-oscar],
-		[exclude oscar service]))
-AC_ARG_ENABLE(workwizu, AC_HELP_STRING([--enable-workwizu],
-		[include workwizu service]))
-AC_ARG_ENABLE(broken_icq, AC_HELP_STRING([--enable-broken-icq],
-		[include broken icq service instead of working one]))
 AC_ARG_ENABLE(smtp, AC_HELP_STRING([--enable-smtp],
 		[include smtp service]))
-AC_ARG_ENABLE(lj, AC_HELP_STRING([--enable-lj],
-		[include livejournal service]))
 AC_ARG_ENABLE(aycryption, AC_HELP_STRING([--disable-aycryption],
  		[exclude encryption utility]))
-AC_ARG_ENABLE(aim_toc, AC_HELP_STRING([--enable-aim-toc],
-		[include aim-toc service]))
-AC_ARG_ENABLE(icq_toc, AC_HELP_STRING([--enable-icq-toc],
-		[include icq-toc service]))
-AC_ARG_ENABLE(icq, AC_HELP_STRING([--disable-icq],
-		[exclude icq service]))
 AC_ARG_ENABLE(irc, AC_HELP_STRING([--disable-irc],
 		[exclude irc service]))
 AC_ARG_ENABLE(jabber, AC_HELP_STRING([--disable-jabber],
 		[exclude jabber service]))
-AC_ARG_ENABLE(msn, AC_HELP_STRING([--disable-msn],
-		[exclude msn service]))
-AC_ARG_ENABLE(yahoo, AC_HELP_STRING([--disable-yahoo],
-		[exclude yahoo service]))
 
 OPTIONAL_PLUG_DIR=""
-DEBUG_LIBMSN=""
 
-if test "$enable_oscar" != no; then
- 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR aim-oscar"
-fi
-if test "$enable_msn" != no; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR msn2"
-fi
-if test "$enable_workwizu" = yes; then
-	have_gmp=no;
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR workwizu"
-	GMP_LDFLAGS="-lgmp"
-	LDFLAGS="$LDFLAGS $GMP_LDFLAGS"
-	AC_CHECK_HEADER(gmp.h, [
-	AC_CHECK_LIB(gmp, __gmpz_init,have_gmp=yes;[EB_LIBS="$EB_LIBS $GMP_LDFLAGS"],, -lgmp)])
-	if test "$have_gmp" = no; then
-	 echo "You need gmp for workwizu"
-	 echo "http://www.swox.com/gmp/"
-	 enable_workwizu=no;
-	fi;
-fi
 if test "$enable_smileys" != no; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR smileys"
-fi
-if test "$enable_yahoo" != no; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR yahoo2"
 fi
 if test "$enable_irc" != no; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR irc"
@@ -421,20 +386,8 @@ fi
 if test "$enable_jabber" != no; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR jabber"
 fi
-if test "$enable_broken_icq" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR icq"
-fi
 if test "$enable_smtp" = yes; then
 	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR smtp"
-fi
-if test "$enable_lj" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR livejournal"
-fi
-if test "$enable_aim_toc" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR aim-toc"
-fi
-if test "$enable_icq_toc" = yes; then
-	OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR icq-toc"
 fi
 if test "$enable_aycryption" != no; then
 	AM_PATH_GPGME(1.0.0, [OPTIONAL_PLUG_DIR="$OPTIONAL_PLUG_DIR aycryption"], 
@@ -451,6 +404,43 @@ AC_ARG_ENABLE(all-warnings, AC_HELP_STRING([--enable-all-warnings],
 if test "$enable_all_warnings" = yes; then
 	CFLAGS="$CFLAGS -Wall"
 	CXXFLAGS="$CXXFLAGS -Wall"
+fi
+
+dnl Hardening flags: always apply _FORTIFY_SOURCE and stack protection
+dnl in non-debug builds.  These catch common buffer overflows at runtime
+dnl with negligible performance cost.
+AC_ARG_ENABLE(hardening, AC_HELP_STRING([--disable-hardening],
+		[disable compiler hardening flags (not recommended)]),
+		[enable_hardening=$enableval], [enable_hardening=yes])
+
+if test "$enable_hardening" = yes; then
+	dnl -D_FORTIFY_SOURCE=2 requires -O1 or higher; guard against -O0.
+	AX_CHECK_COMPILE_FLAG([-D_FORTIFY_SOURCE=2],
+		[CFLAGS="$CFLAGS -D_FORTIFY_SOURCE=2"
+		 CXXFLAGS="$CXXFLAGS -D_FORTIFY_SOURCE=2"],, [-Werror])
+	AX_CHECK_COMPILE_FLAG([-fstack-protector-strong],
+		[CFLAGS="$CFLAGS -fstack-protector-strong"
+		 CXXFLAGS="$CXXFLAGS -fstack-protector-strong"],, [-Werror])
+	dnl Position-independent executable support
+	AX_CHECK_COMPILE_FLAG([-fPIE],
+		[CFLAGS="$CFLAGS -fPIE"
+		 CXXFLAGS="$CXXFLAGS -fPIE"
+		 AX_CHECK_LINK_FLAG([-pie],
+			[EB_LDFLAGS="$EB_LDFLAGS -pie"])],, [-Werror])
+fi
+
+dnl Optional AddressSanitizer + UBSan for debug/developer builds.
+dnl Enable with: ./configure --enable-sanitizers
+AC_ARG_ENABLE(sanitizers, AC_HELP_STRING([--enable-sanitizers],
+		[enable AddressSanitizer and UndefinedBehaviorSanitizer (for developers; do not use in production)]))
+
+if test "$enable_sanitizers" = yes; then
+	AX_CHECK_COMPILE_FLAG([-fsanitize=address,undefined],
+		[CFLAGS="$CFLAGS -fsanitize=address,undefined -fno-omit-frame-pointer"
+		 CXXFLAGS="$CXXFLAGS -fsanitize=address,undefined -fno-omit-frame-pointer"
+		 EB_LDFLAGS="$EB_LDFLAGS -fsanitize=address,undefined"],
+		[AC_MSG_WARN([Compiler does not support -fsanitize=address,undefined; --enable-sanitizers ignored])],
+		[-Werror])
 fi
 
 CFLAGS="$CFLAGS -I\$(top_srcdir)/src"
@@ -555,26 +545,18 @@ AC_CONFIG_FILES([Makefile ayttm.spec
                  po/Makefile.in
                  m4/Makefile 
 		 modules/Makefile
-                 modules/aim-oscar/Makefile
-		 modules/aim-oscar/libfaim/Makefile
-		 modules/aim-oscar/libfaim/include/Makefile
-		 modules/aim-oscar/libfaim/src/Makefile
                  modules/importers/Makefile
                  modules/irc/Makefile
 		 modules/irc/libirc/Makefile
 		 modules/smtp/Makefile
-                 modules/livejournal/Makefile
                  modules/jabber/Makefile
                  modules/jabber/libjabber/Makefile
                  modules/jabber/libjabber/include/Makefile
                  modules/jabber/libjabber/include/jabber/Makefile
                  modules/jabber/libxode/Makefile
                  modules/jabber/libxode/include/Makefile
-                 modules/msn2/Makefile
-                 modules/msn2/libmsn2/Makefile
                  modules/aycryption/Makefile
                  modules/utility/Makefile
-                 modules/yahoo2/Makefile
 		 modules/smileys/Makefile
 		 modules/smileys/console_smileys/Makefile
 		 modules/smileys/giles_smiles/Makefile

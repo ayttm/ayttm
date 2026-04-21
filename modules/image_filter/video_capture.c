@@ -104,12 +104,12 @@ static long int grab_frame(unsigned char **image)
 	unsigned char *outbuf = 0;
 	long int nsize = 0, n;
 
-	char *cmd = strdup(frame_grabber);
+	char *cmd = g_strdup(frame_grabber);
 	while (strstr(cmd, "%d")) {
 		char *tmp = strstr(cmd, "%d");
 		char *rest = 0;
 		if (*(tmp + 2))
-			rest = strdup(tmp + 2);
+			rest = g_strdup(tmp + 2);
 		*tmp = 0;
 		cmd = ay_string_append(cmd, eb_config_dir());
 		if (rest)

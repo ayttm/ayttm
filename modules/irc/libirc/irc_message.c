@@ -21,6 +21,7 @@
  */
 
 #include <string.h>
+#include <glib.h>
 #include "libirc.h"
 #include "irc_replies.h"
 
@@ -88,7 +89,7 @@ void irc_message_parse(char *incoming, irc_account *ia)
 
 	irc_param_list *params = NULL;
 	irc_message_prefix *prefix =
-		(irc_message_prefix *)calloc(1, sizeof(irc_message_prefix));
+		(irc_message_prefix *)g_new0(irc_message_prefix, 1);
 
 	message_len = strlen(incoming);
 
@@ -148,13 +149,13 @@ void irc_message_parse(char *incoming, irc_account *ia)
 
 		/* We've found the command, so now we can store the prefix data. */
 		if (user_offset)
-			prefix->user = strdup(user_offset);
+			prefix->user = g_strdup(user_offset);
 		if (host_offset)
-			prefix->hostname = strdup(host_offset);
+			prefix->hostname = g_strdup(host_offset);
 		if (servername_offset)
-			prefix->servername = strdup(servername_offset);
+			prefix->servername = g_strdup(servername_offset);
 		if (nick_offset)
-			prefix->nick = strdup(nick_offset);
+			prefix->nick = g_strdup(nick_offset);
 	} else
 		command_offset = incoming;
 
@@ -796,14 +797,14 @@ void irc_message_parse(char *incoming, irc_account *ia)
 
 	if (prefix) {
 		if (prefix->user)
-			free(prefix->user);
+			g_free(prefix->user);
 		if (prefix->hostname)
-			free(prefix->hostname);
+			g_free(prefix->hostname);
 		if (prefix->servername)
-			free(prefix->servername);
+			g_free(prefix->servername);
 		if (prefix->nick)
-			free(prefix->nick);
-		free(prefix);
+			g_free(prefix->nick);
+		g_free(prefix);
 		prefix = NULL;
 	}
 

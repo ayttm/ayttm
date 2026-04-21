@@ -98,9 +98,7 @@ void open_url(void *w, char *url)
 		browser = cGetLocalPref("alternate_browser");
 
 	if (!browser || (strlen(browser) == 0)) {
-		browser = (char *)malloc(strlen(DEFAULT_WWW_BROWSER) + 4);
-		strcpy(browser, DEFAULT_WWW_BROWSER);
-		strncat(browser, " %s", 3);
+		browser = g_strdup_printf("%s %%s", DEFAULT_WWW_BROWSER);
 
 		free_browser = 1;
 	}
@@ -124,10 +122,10 @@ void open_url(void *w, char *url)
 		strncat(command, " &", 1280 - strlen(command));
 	}
 	eb_debug(DBG_CORE, "launching %s\n", command);
-	system(command);
+	(void)system(command);
 
 	if (free_browser && browser)
-		free(browser);
+		g_free(browser);
 }
 
 #else

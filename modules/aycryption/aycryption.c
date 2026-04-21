@@ -116,27 +116,27 @@ static int aycryption_init()
 
 	il->widget.checkbox.value = &store_passphrase;
 	il->name = "store_passphrase";
-	il->label = strdup(_("Store passphrase in memory"));
+	il->label = g_strdup(_("Store passphrase in memory"));
 	il->type = EB_INPUT_CHECKBOX;
 
 	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.entry.value = mykey;
 	il->name = "mykey";
-	il->label = strdup(_("Private key for signing:"));
+	il->label = g_strdup(_("Private key for signing:"));
 	il->type = EB_INPUT_ENTRY;
 
 	il->next = g_new0(input_list, 1);
 	il = il->next;
 	il->widget.checkbox.value = &do_aycryption_debug;
 	il->name = "do_aycryption_debug";
-	il->label = strdup(_("Enable debugging"));
+	il->label = g_strdup(_("Enable debugging"));
 	il->type = EB_INPUT_CHECKBOX;
 
 	outgoing_message_filters_remote =
-		l_list_append(outgoing_message_filters_remote, &aycryption_out);
+		g_list_append(outgoing_message_filters_remote, &aycryption_out);
 	incoming_message_filters =
-		l_list_append(incoming_message_filters, &aycryption_in);
+		g_list_append(incoming_message_filters, &aycryption_in);
 
 	gpg_log_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gpg_log_text = gtk_text_view_new();
@@ -203,13 +203,13 @@ static int aycryption_init()
 static int aycryption_finish()
 {
 	outgoing_message_filters_remote =
-		l_list_remove(outgoing_message_filters_remote, &aycryption_out);
+		g_list_remove(outgoing_message_filters_remote, &aycryption_out);
 	incoming_message_filters =
-		l_list_remove(incoming_message_filters, &aycryption_in);
+		g_list_remove(incoming_message_filters, &aycryption_in);
 
 	while (plugin_info.prefs) {
 		input_list *il = plugin_info.prefs->next;
-		free(plugin_info.prefs);
+		g_free(plugin_info.prefs);
 		plugin_info.prefs = il;
 	}
 
@@ -288,9 +288,9 @@ static void set_gpg_key(ebmCallbackData *data)
 		eb_debug(DBG_CRYPT, "contact is null !\n");
 		return;
 	}
-	recp_names = g_slist_append(recp_names, strdup(ct->nick));
+	recp_names = g_slist_append(recp_names, g_strdup(ct->nick));
 	if (ct->gpg_key && ct->gpg_key[0]) ;
-	recp_names = g_slist_append(recp_names, strdup(ct->gpg_key));
+	recp_names = g_slist_append(recp_names, g_strdup(ct->gpg_key));
 	keys = gpgmegtk_recipient_selection(recp_names, ct->gpg_do_encryption,
 		ct->gpg_do_signature);
 	if (keys.kset && keys.key) {

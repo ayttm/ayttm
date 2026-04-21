@@ -114,7 +114,7 @@ extern "C" {
 	ebmImportData *ebmImportData_new();
 	ebmSmileyData *ebmSmileyData_new();
 	ebmContactData *ebmContactData_new();
-	void eb_set_active_menu_status(LList *status_menu, int status);
+	void eb_set_active_menu_status(GList *status_menu, int status);
 
 /* eb_add_menu_item returns a tag, which can be used by eb_remove_menu_item 
  * label:	The name of the menu item to add to the menu

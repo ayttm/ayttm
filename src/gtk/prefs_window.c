@@ -896,29 +896,22 @@ GtkWidget *_volume_selection(const char *inLabelString, GtkWidget *vbox, char *p
 static void _init_sound_files (PrefSet *me)
 {
 	GtkWidget *top_container;
-	GtkWidget *arrive;
-	GtkWidget *away;
-	GtkWidget *leave;
-	GtkWidget*send;
-	GtkWidget *receive;
-	GtkWidget *firstmsg;
-	GtkWidget *volume;
 	GtkWidget *table;
 
 	top_container = _prep_top_container(me);
 
 	table = gtk_table_new(6, 4, FALSE);
 
-	arrive = _sound_file_add_line(_("Contact signs on: "), "BuddyArriveFilename", table, 0);
-	away = _sound_file_add_line(_("Contact goes away: "), "BuddyAwayFilename", table, 1);
-	leave = _sound_file_add_line(_("Contact signs off: "), "BuddyLeaveFilename", table, 2);
-	send = _sound_file_add_line(_("Message sent: "), "SendFilename", table, 3);
-	receive = _sound_file_add_line(_("Message received: "), "ReceiveFilename", table, 4);
-	firstmsg = _sound_file_add_line(_("First message received: "), "FirstMsgFilename", table, 5);
+	(void)_sound_file_add_line(_("Contact signs on: "), "BuddyArriveFilename", table, 0);
+	(void)_sound_file_add_line(_("Contact goes away: "), "BuddyAwayFilename", table, 1);
+	(void)_sound_file_add_line(_("Contact signs off: "), "BuddyLeaveFilename", table, 2);
+	(void)_sound_file_add_line(_("Message sent: "), "SendFilename", table, 3);
+	(void)_sound_file_add_line(_("Message received: "), "ReceiveFilename", table, 4);
+	(void)_sound_file_add_line(_("First message received: "), "FirstMsgFilename", table, 5);
 
 	gtk_box_pack_start(GTK_BOX(top_container), table, FALSE, FALSE, 10);
 
-	volume = _volume_selection(_("Relative volume (dB)"), top_container, "SoundVolume");
+	(void)_volume_selection(_("Relative volume (dB)"), top_container, "SoundVolume");
 }
 
 static void _set_alt_browser_path(GtkFileChooserButton *button, gpointer data)
@@ -1282,8 +1275,8 @@ static gboolean _input_list_to_prefs_dialog(const char *dialog_title, input_list
 			gtk_widget_show(menu);
 			the_list->widget.listbox.widget = menu;
 			
-			int i; LList *l;
-			for(i=0, l=the_list->widget.listbox.list; l; l=l_list_next(l), i++) {
+			int i; GList *l;
+			for(i=0, l=the_list->widget.listbox.list; l; l=g_list_next(l), i++) {
 				char *label = (char *)l->data;
 				gtk_combo_box_append_text(GTK_COMBO_BOX(menu), label);
 			}
@@ -1377,7 +1370,7 @@ static gboolean account_prefs(GtkWidget *button, gpointer data)
 	GtkTreeModel *model = NULL;
 	GtkTreeIter iter;
 	eb_local_account *account = NULL;
-	LList *accountprefs;
+	GList *accountprefs;
 	char *buf;
 	gboolean connected = FALSE;
 	char *message = NULL;
@@ -1521,7 +1514,7 @@ static void _init_accounts (PrefSet *me)
 	gtk_container_add(GTK_CONTAINER(scrollwindow), tree);
 	gtk_box_pack_start(GTK_BOX(top_container), scrollwindow, TRUE, TRUE, 2);
 
-	l_list_foreach(accounts, _account_list_append, store);
+	g_list_foreach(accounts, (GFunc)_account_list_append, store);
 
 	buttonbox = gtk_hbox_new(FALSE, 0);
 
@@ -1671,7 +1664,7 @@ static void _module_load_toggle(GtkCellRendererToggle *toggle, gchar *path, gpoi
 }
 
 static GtkWidget *_init_module_list (PrefSet *me, const char *name, 
-			      LList *list, GtkWidget *top_container)
+			      GList *list, GtkWidget *top_container)
 {
 	GtkListStore *store;
 	GtkTreeViewColumn *column;
@@ -1723,7 +1716,7 @@ static GtkWidget *_init_module_list (PrefSet *me, const char *name,
 
 	gtk_box_pack_start(GTK_BOX(top_container), scrollwindow, TRUE, TRUE, 2);
 
-	l_list_foreach(list, _module_list_append, store);
+	g_list_foreach(list, (GFunc)_module_list_append, store);
 
 	buttonbox = gtk_hbox_new(FALSE, 0);
 
@@ -1741,7 +1734,7 @@ static GtkWidget *_init_module_list (PrefSet *me, const char *name,
 	return tree;
 }
 
-static void _init_modules (PrefSet *me, const char *name, LList *list)
+static void _init_modules (PrefSet *me, const char *name, GList *list)
 {
 	GtkWidget *top_container;
 
@@ -1775,9 +1768,7 @@ static void _init_smileys (PrefSet *me)
 	GtkWidget *button;
 	GtkWidget *tree;
 	GtkWidget *label;
-	char label_text[24];
-
-	sprintf(label_text, "<b>%s</b>", _("Smiley Plugins"));
+	gchar *label_text = g_strdup_printf("<b>%s</b>", _("Smiley Plugins"));
 
 	top_container = _prep_top_container(me);
 
@@ -1786,6 +1777,7 @@ static void _init_smileys (PrefSet *me)
 
 	label = gtk_label_new(NULL);
 	gtk_label_set_markup(GTK_LABEL(label), label_text);
+	g_free(label_text);
 	gtk_misc_set_alignment(GTK_MISC(label), 0, 0.5);
 	gtk_misc_set_padding(GTK_MISC(label), 0, 20);
 	gtk_box_pack_start(GTK_BOX(top_container), label, FALSE, FALSE, 0);

@@ -1,0 +1,59 @@
+name: CodeQL Security Analysis
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["**"]
+  schedule:
+    # Run weekly on Monday at 08:00 UTC to catch new vulnerability rules
+    - cron: "0 8 * * 1"
+
+jobs:
+  analyze:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-22.04
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [c-cpp]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            autoconf automake libtool libltdl-dev \
+            libglib2.0-dev libgtk2.0-dev \
+            libssl-dev libxml2-dev \
+            libenchant-2-dev \
+            flex bison gettext
+
+      - name: Bootstrap autotools
+        run: autoreconf -fiv
+
+      - name: Configure
+        run: ./configure
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          # Security-and-quality includes buffer overflow, format string,
+          # use-after-free, integer overflow, and more.
+          queries: security-and-quality
+
+      - name: Build (CodeQL traces the build)
+        run: make -j$(nproc)
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"

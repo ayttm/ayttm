@@ -107,7 +107,7 @@ static void ok_callback(void)
 	else
 		move_account(con, account);
 
-	if (l_list_empty(con->accounts))
+	if ((!(con->accounts)))
 		remove_contact(con);
 
 	update_contact_list();
@@ -123,20 +123,20 @@ static gint strcasecmp_glist(gconstpointer a, gconstpointer b)
 	return strcasecmp((const char *)a, (const char *)b);
 }
 
-static LList *get_contacts(const gchar *group)
+static GList *get_contacts(const gchar *group_name)
 {
-	LList *node = NULL, *newlist = NULL;
+	GList *node = NULL, *newlist = NULL;
 	grouplist *g;
 
-	g = find_grouplist_by_name(group);
+	g = find_grouplist_by_name(group_name);
 
 	if (g)
 		node = g->members;
 
 	while (node) {
 		newlist =
-			l_list_insert_sorted(newlist,
-			((struct contact *)node->data)->nick, strcasecmp_glist);
+			g_list_insert_sorted(newlist,
+			((struct contact *)node->data)->nick, (GCompareFunc)strcasecmp_glist);
 		node = node->next;
 	}
 
@@ -169,12 +169,11 @@ static void draw_edit_account_window(eb_account *ea, char *window_title,
 	account = ea;
 
 	if (!window_open) {
-		GtkWidget *vbox = NULL;
 		GtkWidget *hbox = NULL;
 		GtkWidget *label = NULL;
 		GtkWidget *table = NULL;
 		GList *list = NULL;
-		LList *walk = NULL;
+		GList *walk = NULL;
 		GList *gwalker;
 
 		table = gtk_table_new(3, 2, FALSE);
@@ -182,7 +181,6 @@ static void draw_edit_account_window(eb_account *ea, char *window_title,
 		gtk_table_set_row_spacings(GTK_TABLE(table), 5);
 		gtk_container_set_border_width(GTK_CONTAINER(table), 5);
 		hbox = gtk_hbox_new(FALSE, 5);
-		vbox = gtk_vbox_new(FALSE, 5);
 
 		/*Entry for Contact Name */
 
@@ -249,10 +247,10 @@ static void draw_edit_account_window(eb_account *ea, char *window_title,
 				gtk_combo_box_append_text(GTK_COMBO_BOX
 					(laccount), str);
 				list = g_list_insert_sorted(list, str,
-					strcasecmp_glist);
+					(GCompareFunc)strcasecmp_glist);
 
 				if (ela == ea->ela)
-					cur_la = strdup(str);
+					cur_la = g_strdup(str);
 			}
 		}
 		if (cur_la == NULL) {
@@ -313,7 +311,7 @@ static void draw_edit_account_window(eb_account *ea, char *window_title,
 
 	if (cur_la) {
 		gtk_entry_set_text(GTK_ENTRY(GTK_BIN(laccount)->child), cur_la);
-		free(cur_la);
+		g_free(cur_la);
 	} else {
 		gtk_entry_set_text(GTK_ENTRY(GTK_BIN(laccount)->child),
 			_("[None]"));

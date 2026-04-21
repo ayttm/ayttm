@@ -125,10 +125,11 @@ void import_gaim_accounts(ebmCallbackData *data)
 	}
 	AIM_ID = get_service_id("AIM");
 	while (!feof(fp)) {
-		fgets(c, 1024, fp);
+		if (!fgets(c, 1024, fp))
+			break;
 		g_strchomp(c);
 		if (*c == 'g') {
-			strncpy(group, c + 2, 1024);
+			g_strlcpy(group, c + 2, sizeof(group));
 			if (!find_grouplist_by_name(group)) {
 				add_group(group);
 			}

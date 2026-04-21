@@ -49,7 +49,7 @@ typedef struct {
 /*
  * CTCP extended data types.
  */
-enum {
+typedef enum {
 	CTCP_NONE = -1,
 	CTCP_ACTION = 0,
 	CTCP_DCC = 1,

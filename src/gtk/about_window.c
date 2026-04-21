@@ -87,7 +87,6 @@ void ay_ui_about_window_create(const tAboutInfo *inAboutInfo)
 	GtkWidget *separator = NULL;
 	GtkBox *vbox = NULL;
 	GtkBox *vbox2 = NULL;
-	GtkStyle *style = NULL;
 	GdkPixbuf *pm = NULL;
 	GtkWidget *scroll = NULL;
 
@@ -110,7 +109,6 @@ void ay_ui_about_window_create(const tAboutInfo *inAboutInfo)
 	gtk_widget_show(GTK_WIDGET(vbox));
 
 	/* logo */
-	style = gtk_widget_get_style(sAboutWindow);
 	pm = gdk_pixbuf_new_from_xpm_data((const char **)ayttmlogo_xpm);
 
 	logo = gtk_image_new_from_pixbuf(pm);

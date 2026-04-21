@@ -64,7 +64,6 @@ char *strdup(const char *s);
 
 #endif
 
-#include "llist.h"
 
 #if !defined(TRUE) && !defined(FALSE)
 enum { FALSE, TRUE };

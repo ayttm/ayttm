@@ -84,7 +84,7 @@ void write_account_list()
 {
 	FILE *fp;
 	char buff2[1024];
-	LList *l1;
+	GList *l1;
 
 	snprintf(buff2, 1024, "%saccounts", config_dir);
 	if (!(fp = fdopen(creat(buff2, S_IRWXU), "w"))) {
@@ -105,17 +105,17 @@ void write_account_list()
 		 * cool stuff :-)
 		 */
 
-		LList *config = RUN_SERVICE(ela)->write_local_config(ela);
+		GList *config = RUN_SERVICE(ela)->write_local_config(ela);
 		char *pwd = value_pair_get_value(config, "PASSWORD");
 		int enc_type =
 			1 + (int)(rand() / (RAND_MAX + 1.0) * (MAX_ENC - 1));
-		char e[2];
+		char e[12];
 		snprintf(e, sizeof(e), "%d", enc_type);
 		config = value_pair_add(config, "enc_type", e);
 		config = value_pair_add(config, "password_encoded",
 			decode_password(pwd, enc_type));
 		config = value_pair_remove(config, "PASSWORD");
-		free(pwd);
+		g_free(pwd);
 		fprintf(fp, "<ACCOUNT %s>\n",
 			eb_services[ela->service_id].name);
 		value_pair_print_values(config, fp, 1);
@@ -135,9 +135,9 @@ void write_contact_list()
 {
 	FILE *fp;
 	char buff2[1024];
-	LList *l1;
-	LList *l2;
-	LList *l3;
+	GList *l1;
+	GList *l2;
+	GList *l3;
 
 	/*
 	 * The contact list is a 3 dimensional linked list, at the top
@@ -208,7 +208,7 @@ int load_accounts_from_file(const char *file)
 	extern int accountparse();
 	extern FILE *accountin;
 	/*char buff[1024];
-	   LList *accounts_old = accounts; */
+	   GList *accounts_old = accounts; */
 
 	if (!(fp = fopen(file, "r")))
 		return 0;
@@ -218,15 +218,15 @@ int load_accounts_from_file(const char *file)
 	eb_debug(DBG_CORE, "closing fp\n");
 	fclose(fp);
 	/*if (accounts_old) {
-	   LList *walk = accounts_old;
+	   GList *walk = accounts_old;
 	   for (; walk; walk = walk->next) 
-	   accounts = l_list_append(accounts, walk->data);
+	   accounts = g_list_append(accounts, walk->data);
 	   }
 	   fp = NULL; */
 /*	g_snprintf(buff, 1024, "%saccounts", eb_config_dir());
 	fp = fdopen(creat(buff, 0700), "w");
 	while (fp && naccounts) {
-		LList *config = NULL;
+		GList *config = NULL;
 		eb_local_account *ela = (eb_local_account *)(naccounts->data);
 		config = RUN_SERVICE(ela)->write_local_config(ela);
 
@@ -260,7 +260,7 @@ int load_contacts_from_file(const char *file)
 	FILE *fp;
 	extern int contactparse();
 	extern FILE *contactin;
-	LList *cts = NULL;
+	GList *cts = NULL;
 
 	if (!(fp = fopen(file, "r")))
 		return 0;
@@ -289,7 +289,7 @@ int load_contacts_from_file(const char *file)
 					(struct contact *)grp->members->data;
 				if (!find_contact_in_group_by_nick(con->nick,
 						oldgrp)) {
-					LList *w = con->accounts;
+					GList *w = con->accounts;
 					int sid = 0;
 					while (w) {
 						eb_account *ea =
@@ -299,7 +299,7 @@ int load_contacts_from_file(const char *file)
 								ea->
 								service_id)) {
 							con->accounts =
-								l_list_remove
+								g_list_remove
 								(con->accounts,
 								ea);
 							w = con->accounts;
@@ -308,7 +308,7 @@ int load_contacts_from_file(const char *file)
 							w = w->next;
 						}
 					}
-					if (!l_list_empty(con->accounts)
+					if (!(!(con->accounts))
 						&& con->accounts->data) {
 						eb_debug(DBG_CORE,
 							" adding contact %s\n",

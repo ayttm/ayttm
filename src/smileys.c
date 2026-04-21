@@ -90,10 +90,10 @@ static char *no_smileys[] = {
 	NULL
 };
 
-LList *smileys = NULL;
-static LList *default_smileys = NULL;
+GList *smileys = NULL;
+static GList *default_smileys = NULL;
 
-static LList *_eb_smileys = NULL;
+static GList *_eb_smileys = NULL;
 
 static t_smiley_set_list *s_smiley_sets = NULL;
 
@@ -108,19 +108,19 @@ static int s_compare_smiley_set(const void *a, const void *b)
 	return (strcasecmp(first->set_name, second->set_name));
 }
 
-void ay_add_smiley_set(const char *inName, LList *inSmileyList)
+void ay_add_smiley_set(const char *inName, GList *inSmileyList)
 {
 	t_smiley_set *new_set;
 	ay_remove_smiley_set(inName);
 
-	new_set = calloc(1, sizeof(t_smiley_set));
+	new_set = g_new0(t_smiley_set, 1);
 
-	new_set->set_name = strdup(inName);
+	new_set->set_name = g_strdup(inName);
 	new_set->set_smiley_list = inSmileyList;
 
 	s_smiley_sets =
-		l_list_insert_sorted(s_smiley_sets, new_set,
-		s_compare_smiley_set);
+		g_list_insert_sorted(s_smiley_sets, new_set,
+		(GCompareFunc)s_compare_smiley_set);
 }
 
 t_smiley_set_list *ay_get_smiley_sets(void)
@@ -153,15 +153,15 @@ void ay_remove_smiley_set(const char *inName)
 	t_smiley_set *the_set = ay_lookup_smiley_set(inName);
 
 	if (the_set != NULL) {
-		s_smiley_sets = l_list_remove(s_smiley_sets, the_set);
+		s_smiley_sets = g_list_remove(s_smiley_sets, the_set);
 
-		free((char *)the_set->set_name);
-		free(the_set);
+		g_free((char *)the_set->set_name);
+		g_free(the_set);
 	}
 }
 
-/* someone figure out how to do this with LList * const */
-LList *eb_smileys(void)
+/* someone figure out how to do this with GList * const */
+GList *eb_smileys(void)
 {
 	return _eb_smileys;
 }
@@ -266,13 +266,13 @@ void init_smileys(void)
 	default_smileys = add_protocol_smiley(default_smileys, ":'(", "cry");
 }
 
-gchar *eb_smilify(const char *text, LList *protocol_smileys,
+gchar *eb_smilify(const char *text, GList *protocol_smileys,
 	const char *service)
 {
 	int ipos = 0;
 	int found;
 	int i;
-	LList *l = protocol_smileys;
+	GList *l = protocol_smileys;
 	GString *newstr;
 	char *result;
 
@@ -365,22 +365,22 @@ gchar *eb_smilify(const char *text, LList *protocol_smileys,
 	return result;
 }
 
-LList *eb_default_smileys(void)
+GList *eb_default_smileys(void)
 {
 	return default_smileys;
 }
 
-LList *add_protocol_smiley(LList *list, const char *text, const char *name)
+GList *add_protocol_smiley(GList *list, const char *text, const char *name)
 {
 	protocol_smiley *psmile;
 
 	psmile = g_new0(protocol_smiley, 1);
 	strncpy(psmile->text, text, sizeof(psmile->text));
 	strncpy(psmile->name, name, sizeof(psmile->name));
-	return l_list_append(list, psmile);
+	return g_list_append(list, psmile);
 }
 
-LList *add_smiley(LList *list, const char *name, const char **data,
+GList *add_smiley(GList *list, const char *name, const char **data,
 	const char *service)
 {
 	smiley *psmile;
@@ -388,16 +388,16 @@ LList *add_smiley(LList *list, const char *name, const char **data,
 	psmile = g_new0(smiley, 1);
 	strncpy(psmile->name, name, sizeof(psmile->name));
 	if (service)
-		psmile->service = strdup(service);
+		psmile->service = g_strdup(service);
 	psmile->pixmap = data;
-	return l_list_append(list, psmile);
+	return g_list_append(list, psmile);
 }
 
 smiley *get_smiley_by_name(const char *name)
 {
 	smiley *psmile;
-	LList *l;
-	for (l = smileys; l; l = l_list_next(l)) {
+	GList *l;
+	for (l = smileys; l; l = g_list_next(l)) {
 		psmile = (smiley *)(l->data);
 		if (!strcmp(psmile->name, name))
 			return psmile;
@@ -408,8 +408,8 @@ smiley *get_smiley_by_name(const char *name)
 smiley *get_smiley_by_name_and_service(const char *name, const char *service)
 {
 	smiley *psmile, *possibility = NULL;
-	LList *l;
-	for (l = smileys; l; l = l_list_next(l)) {
+	GList *l;
+	for (l = smileys; l; l = g_list_next(l)) {
 		psmile = (smiley *)(l->data);
 		if (strcasecmp(psmile->name, name) != 0)
 			continue;
@@ -462,15 +462,15 @@ static gint delete_event_cb(GtkWidget *widget, GdkEvent *event, gpointer data)
 void show_smileys_cb(smiley_callback_data *data)
 {
 	eb_local_account *account;
-	LList *smileys = NULL;
+	GList *smiley_list = NULL;
 	protocol_smiley *msmiley = NULL;
 	GtkWidget *smileys_table = NULL;
 	GtkWidget *button = NULL;
 	GtkWidget *iconwid;
 	GdkPixbuf *icon;
 	GtkWidget *smiley_window;
-	LList *done = NULL;
-	LList *l;
+	GList *done = NULL;
+	GList *l;
 	smiley *dsmile = NULL;
 	int real_len = 0, x = -1, y = 0;
 	int win_w = 0, win_h = 0, w, h;
@@ -492,12 +492,12 @@ void show_smileys_cb(smiley_callback_data *data)
 	}
 
 	if (account && RUN_SERVICE(account)->get_smileys)
-		smileys = RUN_SERVICE(account)->get_smileys();
+		smiley_list = RUN_SERVICE(account)->get_smileys();
 	else
 		return;
-	for (; smileys; smileys = smileys->next) {
+	for (; smiley_list; smiley_list = smiley_list->next) {
 		gboolean already_done = FALSE;
-		msmiley = smileys->data;
+		msmiley = smiley_list->data;
 		for (l = done; l; l = l->next) {
 			protocol_smiley *done_smiley = l->data;
 			if (!strcmp(msmiley->name, done_smiley->name)) {
@@ -509,7 +509,7 @@ void show_smileys_cb(smiley_callback_data *data)
 		if (already_done || !get_smiley_by_name(msmiley->name))
 			continue;
 
-		done = l_list_append(done, msmiley);
+		done = g_list_append(done, msmiley);
 		real_len++;
 	}
 
@@ -519,14 +519,11 @@ void show_smileys_cb(smiley_callback_data *data)
 	cols = real_len / rows + !(!(real_len % rows));
 	smileys_table = gtk_table_new(rows, cols, TRUE);
 
-	for (l = done; l; l = l_list_next(l)) {
+	for (l = done; l; l = g_list_next(l)) {
 		msmiley = l->data;
 		dsmile = get_smiley_by_name_and_service(msmiley->name,
 			GET_SERVICE(account).name);
 		if (dsmile != NULL) {
-			GtkWidget *parent = NULL;
-			if (data && data->c_window)
-				parent = data->c_window->window;
 			icon = gdk_pixbuf_new_from_xpm_data((const char **)
 				dsmile->pixmap);
 			iconwid = gtk_image_new_from_pixbuf(icon);
@@ -556,7 +553,7 @@ void show_smileys_cb(smiley_callback_data *data)
 		}
 	}
 
-	l_list_free(done);
+	g_list_free(done);
 	done = NULL;
 
 	smiley_window = gtk_window_new(GTK_WINDOW_POPUP);

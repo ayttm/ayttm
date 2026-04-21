@@ -359,7 +359,7 @@ static void crash_save_crash_log(GtkButton *button, const gchar *text)
 static void crash_create_bug_report(GtkButton *button, const gchar *data)
 {
 	open_url(NULL,
-		"http://sourceforge.net/tracker/?func=add&group_id=77614&atid=550744");
+		"https://sourceforge.net/tracker/?func=add&group_id=77614&atid=550744");
 }
 
 /*!
@@ -371,7 +371,7 @@ static void crash_debug(unsigned long crash_pid,
 	int choutput[2];
 	pid_t pid;
 
-	pipe(choutput);
+	(void)pipe(choutput);
 
 	if (0 == (pid = fork())) {
 		char *argp[10];
@@ -380,8 +380,8 @@ static void crash_debug(unsigned long crash_pid,
 			g_strconcat(config_dir, G_DIR_SEPARATOR_S, DEBUGGERRC,
 			NULL);
 
-		setgid(getgid());
-		setuid(getuid());
+		(void)setgid(getgid());
+		(void)setuid(getuid());
 
 		/*
 		 * setup debugger to attach to crashed ayttm
@@ -401,7 +401,7 @@ static void crash_debug(unsigned long crash_pid,
 		 * redirect output to write end of pipe
 		 */
 		close(1);
-		dup(choutput[1]);
+		(void)dup(choutput[1]);
 		close(choutput[0]);
 		if (-1 == execvp("gdb", argp))
 			puts("error execvp\n");
@@ -567,9 +567,9 @@ static void crash_handler(int sig)
 		args[2] = buf;
 		args[3] = NULL;
 
-		chdir(startup_dir);
-		setgid(getgid());
-		setuid(getuid());
+		(void)chdir(startup_dir);
+		(void)setgid(getgid());
+		(void)setuid(getuid());
 		execvp(argv0, args);
 	} else {
 		waitpid(pid, NULL, 0);

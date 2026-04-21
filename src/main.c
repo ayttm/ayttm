@@ -217,8 +217,6 @@ int main(int argc, char *argv[])
 		G_DIR_SEPARATOR, G_DIR_SEPARATOR);
 #endif
 
-	g_thread_init(NULL);
-
 #if defined ( HAVE_GETOPT ) || defined ( HAVE_GETOPT_LONG )
 	while (1) {
 #ifdef HAVE_GETOPT_LONG
@@ -295,7 +293,7 @@ int main(int argc, char *argv[])
 #ifdef CRASH_DIALOG
 		case 'C':
 			crash = 1;
-			crash_param = strdup(optarg);
+			crash_param = g_strdup(optarg);
 			break;
 #endif
 		case 'd':
@@ -303,11 +301,11 @@ int main(int argc, char *argv[])
 			/*Make sure we have directory delimiter */
 #if defined( _WIN32 )
 			if (config_dir[strlen(config_dir) - 1] != '\\')
-				strcat(config_dir, "\\");
+				g_strlcat(config_dir, "\\", sizeof(config_dir));
 #else
 			if (config_dir[strlen(config_dir) - 1] !=
 				G_DIR_SEPARATOR)
-				strcat(config_dir, (char *)G_DIR_SEPARATOR);
+				g_strlcat(config_dir, G_DIR_SEPARATOR_S, sizeof(config_dir));
 #endif
 			if (stat(config_dir, &stat_buf) == -1) {
 				perror(config_dir);
@@ -363,20 +361,20 @@ int main(int argc, char *argv[])
 		}
 		if (strlen(url) > 0) {
 			length = strlen("URL-ayttm") + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, "URL-ayttm", length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, "URL-ayttm", length);
 			length = strlen(url) + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, url, length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, url, length);
 		} else {
 			length = strlen(contact) + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, contact, length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, contact, length);
 			length = strlen(message) + 1;
-			write(sock, &length, sizeof(short));
-			write(sock, message, length);
+			(void)write(sock, &length, sizeof(short));
+			(void)write(sock, message, length);
 		}
-		read(sock, &ret, sizeof(int));
+		(void)read(sock, &ret, sizeof(int));
 		close(sock);
 		exit(ret);
 	}
@@ -419,9 +417,9 @@ int main(int argc, char *argv[])
 			exit(1);
 		}
 		length = strlen("focus-ayttm") + 1;
-		write(sock, &length, sizeof(short));
-		write(sock, "focus-ayttm", length);
-		read(sock, &ret, sizeof(int));
+		(void)write(sock, &length, sizeof(short));
+		(void)write(sock, "focus-ayttm", length);
+		(void)read(sock, &ret, sizeof(int));
 		close(sock);
 		exit(ret);
 	}
@@ -473,24 +471,24 @@ int main(int argc, char *argv[])
 
 	/* Make sure this is the first filter that runs */
 	incoming_message_filters =
-		l_list_prepend(incoming_message_filters, ay_chat_convert_incoming);
+		g_list_prepend(incoming_message_filters, ay_chat_convert_incoming);
 	/* And these are the last */
 	incoming_message_filters =
-		l_list_append(incoming_message_filters, ay_smilify_filter);
+		g_list_append(incoming_message_filters, ay_smilify_filter);
 	incoming_message_filters =
-		l_list_append(incoming_message_filters, ay_linkify_filter);
+		g_list_append(incoming_message_filters, ay_linkify_filter);
 
 
 	/* Add your outgoing filters here */
 	outgoing_message_filters_remote =
-		l_list_append(outgoing_message_filters_remote, ay_chat_convert_outgoing);
+		g_list_append(outgoing_message_filters_remote, ay_chat_convert_outgoing);
 	outgoing_message_filters_remote =
-		l_list_append(outgoing_message_filters_remote, ay_convert_eol_filter);
+		g_list_append(outgoing_message_filters_remote, ay_convert_eol_filter);
 
 	outgoing_message_filters_local =
-		l_list_append(outgoing_message_filters_local, ay_smilify_filter);
+		g_list_append(outgoing_message_filters_local, ay_smilify_filter);
 	outgoing_message_filters_local =
-		l_list_append(outgoing_message_filters_local, ay_linkify_filter);
+		g_list_append(outgoing_message_filters_local, ay_linkify_filter);
 
 	accounts_success = load_accounts();
 	load_contacts();

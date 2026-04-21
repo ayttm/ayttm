@@ -25,7 +25,9 @@
 #ifndef __INCLUDE_AYTTM_TRAY_H__
 #define __INCLUDE_AYTTM_TRAY_H__
 
-GtkStatusIcon *ayttm_status_icon;
+#include <glib.h>
+
+extern GtkStatusIcon *ayttm_status_icon;
 
 void ay_load_tray_icon(GdkPixbuf *default_icon);
 void ayttm_end_app(GtkWidget *widget, GdkEvent *event, gpointer data);

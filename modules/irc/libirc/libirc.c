@@ -21,6 +21,7 @@
 
 #include "libirc.h"
 #include "ctcp.h"
+#include <glib.h>
 
 static char irc_modes[] = {
 	'a',
@@ -105,7 +106,7 @@ int irc_send_privmsg(const char *recipient, char *message, irc_account *ia)
 			out_msg);
 
 		if (out_msg)
-			free(out_msg);
+			g_free(out_msg);
 	}
 
 	if (*buff)
@@ -274,7 +275,7 @@ void irc_process_privmsg(const char *to, const char *message,
 	ia->callbacks->got_privmsg(to, out_msg, prefix, ia);
 
 	if (out_msg) {
-		free(out_msg);
+		g_free(out_msg);
 	}
 }
 
@@ -291,7 +292,7 @@ void irc_process_notice(const char *to, const char *message,
 	ia->callbacks->incoming_notice(to, out_msg, prefix, ia);
 
 	if (out_msg) {
-		free(out_msg);
+		g_free(out_msg);
 	}
 }
 
@@ -306,12 +307,10 @@ irc_name_list *irc_gen_name_list(char *message)
 
 		if (list) {
 			list->next =
-				(irc_name_list *)calloc(1,
-				sizeof(irc_name_list));
+				(irc_name_list *)g_new0(irc_name_list, 1);
 			list = list->next;
 		} else if (!list) {
-			list = (irc_name_list *)calloc(1,
-				sizeof(irc_name_list));
+			list = (irc_name_list *)g_new0(irc_name_list, 1);
 			head = list;
 		}
 
@@ -325,7 +324,7 @@ irc_name_list *irc_gen_name_list(char *message)
 		} else
 			list->attribute = '\0';
 
-		list->name = strdup(message);
+		list->name = g_strdup(message);
 
 		/* We're at the end of the list... get out now... */
 		if (!offset)
@@ -343,10 +342,10 @@ irc_param_list *irc_param_list_add(irc_param_list *param_list,
 {
 	irc_param_list *head = param_list;
 	irc_param_list *new =
-		(irc_param_list *)calloc(1, sizeof(irc_param_list));
+		(irc_param_list *)g_new0(irc_param_list, 1);
 
 	if (!param_list) {
-		new->param = strdup(param);
+		new->param = g_strdup(param);
 		new->next = NULL;
 
 		return new;
@@ -357,7 +356,7 @@ irc_param_list *irc_param_list_add(irc_param_list *param_list,
 
 	param_list->next = new;
 
-	new->param = strdup(param);
+	new->param = g_strdup(param);
 	new->next = NULL;
 
 	return head;
@@ -371,7 +370,8 @@ void irc_param_list_free(irc_param_list *param_list)
 	while (param_list) {
 		to_be_freed = param_list;
 		param_list = param_list->next;
-		free(to_be_freed);
+		g_free(to_be_freed->param);
+		g_free(to_be_freed);
 		to_be_freed = NULL;
 	}
 }
@@ -403,12 +403,12 @@ int irc_recv(irc_account *ia, char *buf, int len)
 		if (buf[len - 1] != '\r')
 			return 0;
 
-		fbuf = strdup(buf);
+		fbuf = g_strdup(buf);
 
 		fbuf[len - 1] = '\0';
 		irc_message_parse(fbuf, ia);
 
-		free(fbuf);
+		g_free(fbuf);
 
 		return 1;
 	}

@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <glib.h>
 
 /*
  * String data for CTCP data types
@@ -171,13 +172,13 @@ void ctcp_free_extended_data(ctcp_extended_data_list *data_list)
 
 		if (elem->ext_data) {
 			if (elem->ext_data->data) {
-				free(elem->ext_data->data);
+				g_free(elem->ext_data->data);
 			}
 
-			free(elem->ext_data);
+			g_free(elem->ext_data);
 		}
 
-		free(elem);
+		g_free(elem);
 	}
 }
 
@@ -191,7 +192,7 @@ ctcp_extended_data_list *ctcp_get_extended_data(const char *in_msg, int size)
 	char *temp = NULL;
 	int count = 0;
 
-	char *msg = strdup(in_msg);
+	char *msg = g_strdup(in_msg);
 
 	msg_start = msg;
 
@@ -208,21 +209,18 @@ ctcp_extended_data_list *ctcp_get_extended_data(const char *in_msg, int size)
 
 		if (data_list == NULL) {
 			data_list =
-				(ctcp_extended_data_list *)calloc(1,
-				sizeof(ctcp_extended_data_list));
+				(ctcp_extended_data_list *)g_new0(ctcp_extended_data_list, 1);
 			list_head = data_list;
 		} else {
 			data_list->next =
-				(ctcp_extended_data_list *)calloc(1,
-				sizeof(ctcp_extended_data_list));
+				(ctcp_extended_data_list *)g_new0(ctcp_extended_data_list, 1);
 			data_list = data_list->next;
 		}
 
 		delimiter = !delimiter;
 
 		data_list->ext_data =
-			(ctcp_extended_data *)calloc(1,
-			sizeof(ctcp_extended_data));
+			(ctcp_extended_data *)g_new0(ctcp_extended_data, 1);
 
 		/* We found an odd delimiter. The stuff before it is plain text */
 		if (delimiter) {
@@ -253,7 +251,7 @@ ctcp_extended_data_list *ctcp_get_extended_data(const char *in_msg, int size)
 			}
 		}
 
-		data_list->ext_data->data = strdup(msg);
+		data_list->ext_data->data = g_strdup(msg);
 		msg = tag_loc + 1;
 	}
 
@@ -261,25 +259,22 @@ ctcp_extended_data_list *ctcp_get_extended_data(const char *in_msg, int size)
 	if ((msg - msg_start) < size) {
 		if (data_list == NULL) {
 			data_list =
-				(ctcp_extended_data_list *)calloc(1,
-				sizeof(ctcp_extended_data_list));
+				(ctcp_extended_data_list *)g_new0(ctcp_extended_data_list, 1);
 			list_head = data_list;
 		} else {
 			data_list->next =
-				(ctcp_extended_data_list *)calloc(1,
-				sizeof(ctcp_extended_data_list));
+				(ctcp_extended_data_list *)g_new0(ctcp_extended_data_list, 1);
 			data_list = data_list->next;
 		}
 
 		data_list->ext_data =
-			(ctcp_extended_data *)calloc(1,
-			sizeof(ctcp_extended_data));
+			(ctcp_extended_data *)g_new0(ctcp_extended_data, 1);
 		data_list->ext_data->type = CTCP_NONE;
-		data_list->ext_data->data = strdup(msg);
+		data_list->ext_data->data = g_strdup(msg);
 	}
 
 	if (msg_start) {
-		free(msg_start);
+		g_free(msg_start);
 		msg_start = NULL;
 	}
 
@@ -342,7 +337,7 @@ ctcp_version *ctcp_got_version(const char *msg)
 	char *name_offset = NULL;
 	char *version_offset = NULL;
 
-	ctcp_version *out = (ctcp_version *)calloc(1, sizeof(ctcp_version));
+	ctcp_version *out = (ctcp_version *)g_new0(ctcp_version, 1);
 
 	if (!msg)
 		return NULL;
@@ -357,7 +352,7 @@ ctcp_version *ctcp_got_version(const char *msg)
 	if (version_offset) {
 		ctcp_strndup(out->version, (name_offset + 1),
 			(version_offset - name_offset - 1));
-		out->env = strdup(version_offset + 1);
+		out->env = g_strdup(version_offset + 1);
 	}
 
 	return out;
@@ -395,7 +390,7 @@ ctcp_source *ctcp_got_source(const char *msg)
 	char *host_offset = NULL;
 	char *path_offset = NULL;
 
-	ctcp_source *out = (ctcp_source *)calloc(1, sizeof(ctcp_source));
+	ctcp_source *out = (ctcp_source *)g_new0(ctcp_source, 1);
 
 	if (!msg)
 		return NULL;
@@ -409,7 +404,7 @@ ctcp_source *ctcp_got_source(const char *msg)
 
 	if (path_offset) {
 		ctcp_strndup(out->path, (host_offset + 1), (path_offset - msg));
-		out->file = strdup(path_offset);
+		out->file = g_strdup(path_offset);
 	}
 
 	return out;

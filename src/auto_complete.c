@@ -37,13 +37,13 @@
 #include "debug.h"
 #include "globals.h"
 
-LList *auto_complete_session_words = NULL;
+GList *auto_complete_session_words = NULL;
 
-char *complete_word(LList *l, const char *begin, int *choice)
+char *complete_word(GList *l, const char *begin, int *choice)
 {
 	char *complete = NULL;
-	LList *possible = NULL;
-	LList *cur = NULL;
+	GList *possible = NULL;
+	GList *cur = NULL;
 	int list_length = 0;
 	*choice = TRUE;
 
@@ -53,15 +53,15 @@ char *complete_word(LList *l, const char *begin, int *choice)
 	for (cur = l; cur && cur->data; cur = cur->next) {
 		char *curnick = (char *)cur->data;
 		if (!strncmp(curnick, begin, strlen(begin))) {
-			possible = l_list_prepend(possible, curnick);
+			possible = g_list_prepend(possible, curnick);
 		}
 		list_length++;
 	}
 	if (possible == NULL)
 		return NULL;
-	else if (l_list_length(possible) == 1) {
-		complete = strdup((char *)possible->data);
-		l_list_free(possible);
+	else if (g_list_length(possible) == 1) {
+		complete = g_strdup((char *)possible->data);
+		g_list_free(possible);
 		possible = NULL;
 		*choice = FALSE;
 		return complete;
@@ -70,7 +70,7 @@ char *complete_word(LList *l, const char *begin, int *choice)
 		char *last_good = NULL;
 		for (i = 0; i < 255; i++) {
 			int common = TRUE;
-			char *sub = malloc(i + 1);
+			char *sub = g_malloc(i + 1);
 			memset(sub, 0, i + 1);
 			strncpy(sub, (char *)possible->data, i);
 			cur = possible;
@@ -84,21 +84,21 @@ char *complete_word(LList *l, const char *begin, int *choice)
 			}
 			if (common == TRUE) {
 				if (last_good)
-					free(last_good);
+					g_free(last_good);
 				last_good = sub;
 			} else {
-				l_list_free(possible);
-				free(sub);
+				g_list_free(possible);
+				g_free(sub);
 				return last_good;
 			}
 		}
 	}
 	if (possible)
-		l_list_free(possible);
+		g_list_free(possible);
 	return complete;
 }
 
-int chat_auto_complete(GtkWidget *entry, LList *words, GdkEventKey *event)
+int chat_auto_complete(GtkWidget *entry, GList *words, GdkEventKey *event)
 {
 	GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(entry));
 	GtkTextIter insert_iter;
@@ -151,8 +151,7 @@ int chat_auto_complete(GtkWidget *entry, LList *words, GdkEventKey *event)
 		if (last_word != word)
 			last_word++;
 
-		comp_word = malloc(strlen(last_word) + 2);
-		sprintf(comp_word, "%s%c", last_word, event->keyval);
+		comp_word = g_strdup_printf("%s%c", last_word, event->keyval);
 		/* eb_debug(DBG_CORE, "word caught: %s\n",comp_word); */
 		nick = complete_word(words, comp_word, &choice);
 
@@ -237,7 +236,7 @@ void chat_auto_complete_insert(GtkWidget *entry, GdkEventKey *event)
 		/*char * nick = NULL; */
 		/*int choice = TRUE; */
 		int found = 0;
-		LList *l = auto_complete_session_words;
+		GList *l = auto_complete_session_words;
 
 		int last_char = strlen(word) - 1;
 
@@ -273,7 +272,7 @@ void chat_auto_complete_insert(GtkWidget *entry, GdkEventKey *event)
 		if (!found) {
 			/* eb_debug(DBG_CORE, "word inserted: %s\n",last_word); */
 			auto_complete_session_words =
-				l_list_prepend(auto_complete_session_words,
+				g_list_prepend(auto_complete_session_words,
 				last_word);
 		}
 	}

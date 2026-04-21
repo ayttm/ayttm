@@ -26,32 +26,32 @@
 #include "value_pair.h"
 #include "util.h"
 
-char *value_pair_get_value(LList *pairs, const char *key)
+char *value_pair_get_value(GList *pairs, const char *key)
 {
-	LList *node;
+	GList *node;
 	for (node = pairs; node; node = node->next) {
 		value_pair *vp = node->data;
 		if (!strcasecmp(key, vp->key)) {
 			if (!vp->value)
-				return strdup("");
+				return g_strdup("");
 			else
-				return strdup(vp->value);
+				return g_strdup(vp->value);
 		}
 	}
 	return NULL;
 }
 
-void value_pair_free(LList *pairs)
+void value_pair_free(GList *pairs)
 {
-	LList *node;
+	GList *node;
 	for (node = pairs; node; node = node->next)
-		free(node->data);
-	l_list_free(pairs);
+		g_free(node->data);
+	g_list_free(pairs);
 }
 
-void value_pair_print_values(LList *pairs, FILE *file, int indent)
+void value_pair_print_values(GList *pairs, FILE *file, int indent)
 {
-	LList *node;
+	GList *node;
 	int i;
 	char *tmp;
 
@@ -63,11 +63,11 @@ void value_pair_print_values(LList *pairs, FILE *file, int indent)
 
 		tmp = escape_string(vp->value);
 		fprintf(file, "%s=\"%s\"\n", vp->key, tmp);
-		free(tmp);
+		g_free(tmp);
 	}
 }
 
-LList *value_pair_add(LList *list, const char *key, const char *value)
+GList *value_pair_add(GList *list, const char *key, const char *value)
 {
 	value_pair *vp = NULL;
 	char *old_value = NULL;
@@ -76,35 +76,35 @@ LList *value_pair_add(LList *list, const char *key, const char *value)
 
 	if (old_value != NULL) {
 		list = value_pair_remove(list, key);
-		free(old_value);
+		g_free(old_value);
 	}
 
-	vp = calloc(1, sizeof(value_pair));
-	strncpy(vp->key, key, MAX_PREF_NAME_LEN);
-	strncpy(vp->value, value, MAX_PREF_LEN);
+	vp = g_new0(value_pair, 1);
+	g_strlcpy(vp->key, key, MAX_PREF_NAME_LEN);
+	g_strlcpy(vp->value, value, MAX_PREF_LEN);
 
-	return l_list_append(list, vp);
+	return g_list_append(list, vp);
 }
 
-LList *value_pair_remove(LList *pairs, const char *key)
+GList *value_pair_remove(GList *pairs, const char *key)
 {
-	LList *node;
+	GList *node;
 	for (node = pairs; node; node = node->next) {
 		value_pair *vp = node->data;
 		if (vp && !strcasecmp(key, vp->key)) {
-			pairs = l_list_remove_link(pairs, node);
-			free(node->data);
-			free(node);
+			pairs = g_list_remove_link(pairs, node);
+			g_free(node->data);
+			g_list_free_1(node);
 			break;
 		}
 	}
 	return pairs;
 }
 
-LList *value_pair_update(LList *pairs, LList *new_list)
+GList *value_pair_update(GList *pairs, GList *new_list)
 {
 
-	LList *node;
+	GList *node;
 	for (node = new_list; node; node = node->next) {
 		value_pair *vp = node->data;
 		pairs = value_pair_remove(pairs, vp->key);

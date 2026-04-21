@@ -30,7 +30,6 @@
 #ifndef __ACCOUNT_H__
 #define __ACCOUNT_H__
 
-#include "llist.h"
 #include "input_list.h"
 #include "prefs.h"
 
@@ -42,7 +41,7 @@ extern "C" {
 
 	typedef struct _grouplist {
 		char name[255];
-		LList *members;
+		GList *members;
 		void *list_item;	/* GtkWidget */
 		void *tree;	/* GtkWidget */
 		void *label;	/* GtkWidget */
@@ -57,8 +56,8 @@ extern "C" {
 		int connected;
 		int connecting;
 		void *status_button;	/* GtkWidget */
-		LList *status_menu;
-		LList *status_pix;	/* GtkWidget */
+		GList *status_menu;
+		GList *status_pix;	/* GtkWidget */
 		void *protocol_local_account_data;
 		int mgmt_flush_tag;
 		int connect_at_startup;

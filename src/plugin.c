@@ -94,10 +94,10 @@ static int compare_plugin_name(gconstpointer a, gconstpointer b)
 
 static eb_PLUGIN_INFO *FindLoadedPluginByService(const char *service)
 {
-	LList *plugins = GetPref(EB_PLUGIN_LIST);
-	LList *PluginData =
-		l_list_find_custom(plugins, service,
-		compare_plugin_loaded_service);
+	GList *plugins = GetPref(EB_PLUGIN_LIST);
+	GList *PluginData =
+		g_list_find_custom(plugins, service,
+		(GCompareFunc)compare_plugin_loaded_service);
 	if (PluginData)
 		return (PluginData->data);
 	return (NULL);
@@ -105,9 +105,9 @@ static eb_PLUGIN_INFO *FindLoadedPluginByService(const char *service)
 
 eb_PLUGIN_INFO *FindPluginByName(const char *name)
 {
-	LList *plugins = GetPref(EB_PLUGIN_LIST);
-	LList *PluginData =
-		l_list_find_custom(plugins, name, compare_plugin_name);
+	GList *plugins = GetPref(EB_PLUGIN_LIST);
+	GList *PluginData =
+		g_list_find_custom(plugins, name, (GCompareFunc)compare_plugin_name);
 	if (PluginData)
 		return (PluginData->data);
 	return (NULL);
@@ -118,23 +118,30 @@ static void SetPluginInfo(PLUGIN_INFO *pi, const char *name, AyttmPlugin Module,
 	PLUGIN_STATUS status, const char *status_desc, const char *service,
 	gboolean force)
 {
-	LList *plugins = NULL;
+	GList *plugins = NULL;
 	eb_PLUGIN_INFO *epi = NULL;
 
 	epi = FindPluginByName(name);
 	if (!epi) {
 		epi = g_new0(eb_PLUGIN_INFO, 1);
 		plugins = GetPref(EB_PLUGIN_LIST);
-		plugins = l_list_append(plugins, epi);
+		plugins = g_list_append(plugins, epi);
 		SetPref(EB_PLUGIN_LIST, plugins);
 	} else if (force == TRUE || epi->status != PLUGIN_LOADED) {
-		if (epi->service)
-			free(epi->service);
-		free(epi->name);
-		free(epi->pi.module_name);
-		free(epi->pi.description);
-		free(epi->pi.version);
-		free(epi->pi.date);
+		if (epi->service) {
+			g_free(epi->service);
+			epi->service = NULL;
+		}
+		g_free(epi->name);
+		epi->name = NULL;
+		g_free(epi->pi.module_name);
+		epi->pi.module_name = NULL;
+		g_free(epi->pi.description);
+		epi->pi.description = NULL;
+		g_free(epi->pi.version);
+		epi->pi.version = NULL;
+		g_free(epi->pi.date);
+		epi->pi.date = NULL;
 	} else			/* A plugin is already succesfully load */
 		return;
 	epi->status = status;
@@ -142,16 +149,18 @@ static void SetPluginInfo(PLUGIN_INFO *pi, const char *name, AyttmPlugin Module,
 	if (!pi)
 		pi = &Plugin_Cannot_Load;
 	epi->pi.type = pi->type;
-	epi->pi.module_name = strdup(pi->module_name);
-	epi->pi.description = strdup(pi->description);
-	epi->pi.version = strdup(pi->version);
-	epi->pi.date = strdup(pi->date);
+	epi->pi.module_name = g_strdup(pi->module_name);
+	epi->pi.description = g_strdup(pi->description);
+	epi->pi.version = g_strdup(pi->version);
+	epi->pi.date = g_strdup(pi->date);
 	epi->pi.init = pi->init;
 	epi->pi.finish = pi->finish;
 	epi->pi.prefs = pi->prefs;
-	epi->name = strdup(name);
+	epi->name = g_strdup(name);
 	if (service)
-		epi->service = strdup(service);
+		epi->service = g_strdup(service);
+	else
+		epi->service = NULL;
 	epi->Module = Module;
 
 	if (status == PLUGIN_CANNOT_LOAD) {
@@ -253,13 +262,13 @@ int load_module(const char *path, const char *name)
 	assert(path != NULL);
 	assert(name != NULL);
 
-	full_path = calloc(strlen(path)+strlen(name)+2, sizeof(char));
+	full_path = g_strdup_printf("%s/%s", path, name);
 
 	assert(full_path != NULL);
 
-	sprintf(full_path, "%s/%s", path, name);
-
-	return (load_module_full_path(full_path));
+	int result = load_module_full_path(full_path);
+	g_free(full_path);
+	return result;
 }
 
 /* This is really a modules loader now */
@@ -268,7 +277,7 @@ void load_modules(void)
 	/* UNUSED struct dirent **namelist=NULL; */
 	char buf[1024], *modules_path = NULL, *cur_path = NULL;
 	char *tok_buf = NULL, *tok_buf_old = NULL;
-	int n = 0, success = 0;
+	int n = 0;
 	struct dirent *dp;
 	DIR *dirp;
 
@@ -306,7 +315,7 @@ void load_modules(void)
 				continue;
 			} else if (select_module_entry(dp)) {
 				n++;
-				success = load_module(cur_path, dp->d_name);
+				(void)load_module(cur_path, dp->d_name);
 			}
 		}
 		if (n == 0) {
@@ -340,7 +349,7 @@ static int load_service_plugin(AyttmPlugin Module, PLUGIN_INFO *info,
 	int service_id = -1;
 
 	eb_PLUGIN_INFO *epi = NULL;
-	LList *user_prefs = NULL;
+	GList *user_prefs = NULL;
 
 	Service_Info = (struct service *)ayttm_dlsym(Module, "SERVICE_INFO");
 
@@ -443,7 +452,7 @@ static int load_plugin_default(AyttmPlugin Module, PLUGIN_INFO *info,
 {
 	const int buf_len = 1024;
 	char buf[buf_len];
-	LList *user_prefs = NULL;
+	GList *user_prefs = NULL;
 
 	eb_debug(DBG_CORE, ">\n");
 
@@ -532,7 +541,7 @@ int unload_module(eb_PLUGIN_INFO *epi)
 	}
 	if (epi->service) {
 		struct service SERVICE_INFO =
-			{ strdup(epi->service), -1, SERVICE_CAN_NOTHING, NULL };
+			{ g_strdup(epi->service), -1, SERVICE_CAN_NOTHING, NULL };
 
 		SERVICE_INFO.sc = eb_nomodule_query_callbacks();
 		add_service(&SERVICE_INFO);
@@ -550,7 +559,7 @@ int unload_module(eb_PLUGIN_INFO *epi)
 
 void unload_modules(void)
 {
-	LList *plugins = GetPref(EB_PLUGIN_LIST);
+	GList *plugins = GetPref(EB_PLUGIN_LIST);
 
 	for (; plugins; plugins = plugins->next) {
 		unload_module(plugins->data);

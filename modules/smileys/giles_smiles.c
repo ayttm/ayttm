@@ -47,7 +47,7 @@ static int plugin_init();
 static int plugin_finish();
 
 static int ref_count = 0;
-static LList *my_smileys = NULL;
+static GList *my_smileys = NULL;
 
 /*  Module Exports */
 PLUGIN_INFO plugin_info = {
@@ -109,7 +109,7 @@ static int plugin_finish()
 	if (smileys == my_smileys)
 		smileys = eb_smileys();
 
-	l_list_free(my_smileys);
+	g_list_free(my_smileys);
 	my_smileys = NULL;
 
 	if (smiley_tag && result) {

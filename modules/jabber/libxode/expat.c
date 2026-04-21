@@ -40,6 +40,7 @@
  * --------------------------------------------------------------------------*/
 
 #include "lib.h"
+#include <glib.h>
 
 void expat_startElement(void *userdata, const char *name, const char **atts)
 {
@@ -87,7 +88,7 @@ xmlnode xmlnode_str(char *str, int len)
 	if (NULL == str)
 		return NULL;
 
-	x = malloc(sizeof(void *));
+	x = g_malloc(sizeof(void *));
 
 	*x = NULL;		/* pointer to NULL */
 	p = XML_ParserCreate(NULL);
@@ -100,7 +101,7 @@ xmlnode xmlnode_str(char *str, int len)
 		*x = NULL;
 	}
 	node = *x;
-	free(x);
+	g_free(x);
 	XML_ParserFree(p);
 	return node;		/* return the xmlnode x points to */
 }
@@ -119,7 +120,7 @@ xmlnode xmlnode_file(char *file)
 	if (fd < 0)
 		return NULL;
 
-	x = malloc(sizeof(void *));
+	x = g_malloc(sizeof(void *));
 
 	*x = NULL;		/* pointer to NULL */
 	p = XML_ParserCreate(NULL);
@@ -139,7 +140,7 @@ xmlnode xmlnode_file(char *file)
 
 	node = *x;
 	XML_ParserFree(p);
-	free(x);
+	g_free(x);
 	close(fd);
 	return node;		/* return the xmlnode x points to */
 }

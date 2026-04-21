@@ -157,7 +157,7 @@ static char *strip_color(unsigned char *text)
 	unsigned char *new_str;
 
 	if (!text)
-		return calloc(1, sizeof(char));
+		return g_new0(char, 1);
 
 	len = strlen((char *)text);
 	new_str = calloc(len + 2, sizeof(char));
@@ -407,8 +407,8 @@ static void irc_connect_cb(AyConnection *con, AyConnectionStatus error,
 	eb_debug(DBG_IRC, "Connected to IRC\n");
 
 	/* Puzzle out the nick we're going to ask the server for */
-	ila->ia->nick = strdup(ela->handle);
-	ila->ia->user = strdup(ela->handle);
+	ila->ia->nick = g_strdup(ela->handle);
+	ila->ia->user = g_strdup(ela->handle);
 
 	if (!ila->ia->nick)
 		return;
@@ -454,9 +454,9 @@ static void ay_irc_got_welcome(const char *nick, const char *message,
 
 	/* Change my nickname if the server has truncated it. */
 	if (ia->nick)
-		free(ia->nick);
+		g_free(ia->nick);
 
-	ia->nick = strdup(nick);
+	ia->nick = g_strdup(nick);
 }
 
 static void ay_irc_got_ping(const char *message, irc_account *ia)
@@ -490,7 +490,7 @@ static void ay_irc_logout(eb_local_account *ela)
 	irc_local_account *ila =
 		(irc_local_account *)ela->protocol_local_account_data;
 
-	LList *node;
+	GList *node;
 	eb_account *ea = NULL;
 	ay_irc_account *eia = NULL;
 
@@ -560,7 +560,7 @@ static void ay_irc_logout(eb_local_account *ela)
 
 			eb_debug(DBG_IRC, "Removed User: %s\n", ea->handle);
 
-			c->accounts = l_list_remove(c->accounts, ea);
+			c->accounts = g_list_remove(c->accounts, ea);
 			g_free(eia);
 			eia = NULL;
 			g_free(ea);
@@ -589,7 +589,7 @@ static int ay_irc_send_im(eb_local_account *account_from,
 	Conversation *room = account_to->account_contact->conversation;
 
 	if (account_to->handle) {
-		nick = strdup(account_to->handle);
+		nick = g_strdup(account_to->handle);
 		alpha = strchr(nick, '@');
 		if (!alpha)
 			goto out;
@@ -618,7 +618,7 @@ static int ay_irc_send_im(eb_local_account *account_from,
 
 out:
 	if (nick)
-		free(nick);
+		g_free(nick);
 
 	return ret;
 }
@@ -664,7 +664,7 @@ static void irc_init_account_prefs(eb_local_account *ela)
 	il->type = EB_INPUT_ENTRY;
 }
 
-static eb_local_account *ay_irc_read_local_config(LList *pairs)
+static eb_local_account *ay_irc_read_local_config(GList *pairs)
 {
 	eb_local_account *ela = g_new0(eb_local_account, 1);
 	irc_local_account *ila = g_new0(irc_local_account, 1);
@@ -712,12 +712,12 @@ static eb_local_account *ay_irc_read_local_config(LList *pairs)
 		return NULL;
 }
 
-static LList *ay_irc_write_local_config(eb_local_account *account)
+static GList *ay_irc_write_local_config(eb_local_account *account)
 {
 	return eb_input_to_value_pair(account->prefs);
 }
 
-static eb_account *ay_irc_read_config(eb_account *ea, LList *config)
+static eb_account *ay_irc_read_config(eb_account *ea, GList *config)
 {
 	ay_irc_account *eia = g_new0(ay_irc_account, 1);
 	char *temp;
@@ -737,18 +737,18 @@ static eb_account *ay_irc_read_config(eb_account *ea, LList *config)
 		irc_local_account *ila = ea->ela->protocol_local_account_data;
 
 		if (!strcmp(ila->ia->connect_address, eia->server))
-			ila->friends = l_list_append(ila->friends, ea);
+			ila->friends = g_list_append(ila->friends, ea);
 	}
 	return ea;
 }
 
-static LList *ay_irc_get_states()
+static GList *ay_irc_get_states()
 {
 	int i = 0;
-	LList *states = NULL;
+	GList *states = NULL;
 
 	for (; i < IRC_STATE_COUNT; i++)
-		states = l_list_append(states, irc_states[i]);
+		states = g_list_append(states, irc_states[i]);
 
 	return states;
 }
@@ -756,7 +756,7 @@ static LList *ay_irc_get_states()
 static char *ay_irc_check_login(const char *user, const char *pass)
 {
 	if (!strrchr(user, '@'))
-		return strdup(_
+		return g_strdup(_
 			("No hostname found in your login (which should be in user@host form)."));
 
 	return NULL;
@@ -809,7 +809,7 @@ static void ay_irc_add_user(eb_account *account)
 			(irc_local_account *)ela->protocol_local_account_data;
 
 		if (!strcmp(ila->ia->connect_address, eia->server))
-			ila->friends = l_list_append(ila->friends, account);
+			ila->friends = g_list_append(ila->friends, account);
 	}
 }
 
@@ -829,7 +829,7 @@ static void ay_irc_del_user(eb_account *account)
 			(irc_local_account *)ela->protocol_local_account_data;
 		if (eia && eia->server
 			&& !strcmp(ila->ia->connect_address, eia->server))
-			ila->friends = l_list_remove(ila->friends, account);
+			ila->friends = g_list_remove(ila->friends, account);
 	}
 }
 
@@ -972,7 +972,7 @@ static void ay_irc_set_away(eb_local_account *account, char *message, int away)
 		if (away)
 			irc_set_away(message, ila->ia);
 		else {
-			LList *l;
+			GList *l;
 			for (l = ila->current_rooms; l; l = l->next) {
 				out_msg =
 					ctcp_gen_extended_data_request
@@ -1037,7 +1037,7 @@ static void irc_info_update(info_window *iw)
 			sizeof(message) - strlen(message));
 
 		if (freeme) {
-			free(freeme);
+			g_free(freeme);
 			freeme = NULL;
 		}
 	}
@@ -1046,11 +1046,11 @@ static void irc_info_update(info_window *iw)
 
 	if (ii->fullmessage) {
 		if (ii->fullmessage)
-			free(ii->fullmessage);
+			g_free(ii->fullmessage);
 
 		ii->fullmessage = NULL;
 	}
-	ii->fullmessage = strdup(message);
+	ii->fullmessage = g_strdup(message);
 
 	html_text_buffer_append(GTK_TEXT_VIEW(iw->info), ii->fullmessage,
 		HTML_IGNORE_BACKGROUND | HTML_IGNORE_FOREGROUND);
@@ -1061,13 +1061,13 @@ static void irc_info_update(info_window *iw)
 static void irc_info_data_cleanup(info_window *iw)
 {
 	if (((irc_info *)iw->info_data)->whois_info)
-		free(((irc_info *)(iw->info_data))->whois_info);
+		g_free(((irc_info *)(iw->info_data))->whois_info);
 
 	if (((irc_info *)(iw->info_data))->fullmessage)
-		free(((irc_info *)(iw->info_data))->fullmessage);
+		g_free(((irc_info *)(iw->info_data))->fullmessage);
 
 	if (iw->info_data)
-		free(iw->info_data);
+		g_free(iw->info_data);
 
 	iw->info_data = NULL;
 }
@@ -1084,7 +1084,7 @@ static void ay_irc_get_info(eb_local_account *account_from,
 	ay_irc_account *eia =
 		(ay_irc_account *)account_to->protocol_account_data;
 
-	nick = strdup(account_to->handle);
+	nick = g_strdup(account_to->handle);
 
 	if ((alpha = strchr(nick, '@')))
 		*alpha = '\0';
@@ -1099,7 +1099,7 @@ static void ay_irc_get_info(eb_local_account *account_from,
 		gtk_widget_show(account_to->infowindow->window);
 	}
 
-	account_to->infowindow->info_data = calloc(1, sizeof(irc_info));
+	account_to->infowindow->info_data = g_new0(irc_info, 1);
 
 	((irc_info *)(account_to->infowindow->info_data))->me = account_to;
 	account_to->infowindow->cleanup = irc_info_data_cleanup;
@@ -1164,10 +1164,10 @@ static void ay_got_whoisuser(const char *nick, const char *user,
 	}
 
 	if (!ea->infowindow->info_data)
-		ea->infowindow->info_data = calloc(1, sizeof(irc_info));
+		ea->infowindow->info_data = g_new0(irc_info, 1);
 
 	((irc_info *)ea->infowindow->info_data)->whois_info =
-		strdup(whois_info);;
+		g_strdup(whois_info);;
 	((irc_info *)ea->infowindow->info_data)->me = ea;
 	ea->infowindow->cleanup = irc_info_data_cleanup;
 
@@ -1220,7 +1220,7 @@ static void ay_got_whoisidle(const char *from, int since, const char *message,
 	}
 
 	if (!ea->infowindow->info_data)
-		ea->infowindow->info_data = calloc(1, sizeof(irc_info));
+		ea->infowindow->info_data = g_new0(irc_info, 1);
 
 	eia->idle = since;
 
@@ -1280,7 +1280,7 @@ static void ay_got_whoisserver(const char *nick, const char *server,
 	}
 
 	if (!ea->infowindow->info_data)
-		ea->infowindow->info_data = calloc(1, sizeof(irc_info));
+		ea->infowindow->info_data = g_new0(irc_info, 1);
 
 	snprintf(whois_info, sizeof(whois_info),
 		_("<i><b>Server Info: </b></i> %s<br>"), info);
@@ -1288,7 +1288,7 @@ static void ay_got_whoisserver(const char *nick, const char *server,
 	strncpy(eia->realserver, server, sizeof(eia->realserver) - 1);
 
 	((irc_info *)ea->infowindow->info_data)->whois_info =
-		strdup(whois_info);
+		g_strdup(whois_info);
 
 	irc_info_update(ea->infowindow);
 }
@@ -1417,10 +1417,10 @@ static void ay_got_channel_list(const char *me, const char *channel, int users,
 	irc_local_account *ila =
 		(irc_local_account *)ela->protocol_local_account_data;
 
-	char *chnl = strdup(channel);
+	char *chnl = g_strdup(channel);
 
-	ila->channel_list = l_list_insert_sorted(ila->channel_list, chnl,
-		(LListCompFunc) strcasecmp);
+	ila->channel_list = g_list_insert_sorted(ila->channel_list, chnl,
+		(GCompareFunc) strcasecmp);
 }
 
 static void ay_got_channel_listend(const char *message,
@@ -1430,10 +1430,10 @@ static void ay_got_channel_listend(const char *message,
 	irc_local_account *ila =
 		(irc_local_account *)ela->protocol_local_account_data;
 
-	ila->got_public_chatrooms(l_list_copy(ila->channel_list),
+	ila->got_public_chatrooms(g_list_copy(ila->channel_list),
 		ila->public_chatroom_callback_data);
 
-	l_list_free(ila->channel_list);
+	g_list_free(ila->channel_list);
 
 	ila->channel_list = NULL;
 }
@@ -1443,7 +1443,7 @@ static void ay_buddy_quit(const char *message, irc_message_prefix *prefix,
 	irc_account *ia)
 {
 	Conversation *ecr;
-	LList *node = chat_window_list;
+	GList *node = chat_window_list;
 	char buddy_name[BUF_LEN];
 
 	eb_account *ea;
@@ -1538,7 +1538,7 @@ static void ay_buddy_nick_change(const char *newnick,
 	Conversation *ecr;
 	char room_name[BUF_LEN];
 
-	LList *node = chat_window_list;
+	GList *node = chat_window_list;
 
 	snprintf(room_name, sizeof(room_name), "#notices-%s-%s@%s",
 		ia->nick, ia->connect_address, ia->connect_address);
@@ -1612,8 +1612,8 @@ static void ay_got_invite(const char *to, const char *channel,
 	eb_local_account *ela = (eb_local_account *)ia->data;
 
 	if (!(ecr = ay_conversation_find_by_name(ela, channel)))
-		invite_dialog(ela, prefix->nick, strdup(channel),
-			strdup(channel));
+		invite_dialog(ela, prefix->nick, g_strdup(channel),
+			g_strdup(channel));
 }
 
 void ay_irc_process_incoming_message(const char *recipient, const char *message,
@@ -1656,7 +1656,7 @@ void ay_irc_process_incoming_message(const char *recipient, const char *message,
 				ea->handle);
 
 			/* add to friends list so that we can sign them off on logoff */
-			ila->friends = l_list_append(ila->friends, ea);
+			ila->friends = g_list_append(ila->friends, ea);
 		} else if (!ea->ela)
 			ea->ela = ela;
 
@@ -1683,7 +1683,7 @@ void ay_irc_process_incoming_message(const char *recipient, const char *message,
 		if (message)
 			msg = (char *)strip_color((unsigned char *)message);
 		else
-			msg = strdup("");
+			msg = g_strdup("");
 
 		eb_parse_incoming_message(ela, ea, msg);
 	} else {
@@ -1709,7 +1709,7 @@ void ay_irc_process_incoming_message(const char *recipient, const char *message,
 	}
 
 	if (msg) {
-		free(msg);
+		g_free(msg);
 		msg = NULL;
 	}
 }
@@ -1753,7 +1753,7 @@ static void ay_irc_got_privmsg(const char *recipient, const char *message,
 				}
 				
 				if (msg) {
-					free(msg);
+					g_free(msg);
 					msg = NULL;
 				}
 				
@@ -1827,7 +1827,7 @@ static void ay_irc_got_topic(const char *channel, const char *topic,
 		ay_conversation_display_notification(ecr, msg, IRC_TOPIC);
 
 		if (msg) {
-			free(msg);
+			g_free(msg);
 			msg = NULL;
 		}
 	}
@@ -1906,13 +1906,13 @@ static void ay_irc_got_notice(const char *recipient, const char *message,
 			}
 			
 			if (element->data) {
-				free(element->data);
+				g_free(element->data);
 				element->data = NULL;
 			}
 			
 			type = IRC_CTCP_VERSION;
 			
-			element->data = strdup(notice);
+			element->data = g_strdup(notice);
 			
 			break;
 		}
@@ -1932,11 +1932,11 @@ static void ay_irc_got_notice(const char *recipient, const char *message,
 				  servername), element->data);
 			
 			if (element->data) {
-				free(element->data);
+				g_free(element->data);
 				element->data = NULL;
 			}
 			
-			element->data = strdup(notice);
+			element->data = g_strdup(notice);
 			type = IRC_CTCP_TIME;
 			
 			break;
@@ -1961,21 +1961,21 @@ static void ay_irc_got_notice(const char *recipient, const char *message,
 				  servername), element->data);
 			
 			if (element->data) {
-				free(element->data);
+				g_free(element->data);
 				element->data = NULL;
 			}
-			element->data = strdup(notice);
+			element->data = g_strdup(notice);
 			type = CHAT_NOTIFICATION_NOTE;
 		}
 		}
 		
 		if (element->data && element->data[0]) {
 			if (prefix->nick) {
-				free(prefix->nick);
-				prefix->nick = strdup(room_name);
+				g_free(prefix->nick);
+				prefix->nick = g_strdup(room_name);
 			} else if (prefix->servername) {
-				free(prefix->servername);
-				prefix->servername = strdup(room_name);
+				g_free(prefix->servername);
+				prefix->servername = g_strdup(room_name);
 			}
 			/* We use chat room windows instead of normal chat windows since we want
 			   to be able to type commands in them. */
@@ -2006,7 +2006,7 @@ static void ay_irc_join_chat_room(Conversation *room)
 	if (strcasecmp(room->name, room_name))
 		irc_join(room->name, ila->ia);
 
-	ila->current_rooms = l_list_prepend(ila->current_rooms, room);
+	ila->current_rooms = g_list_prepend(ila->current_rooms, room);
 }
 
 static void ay_irc_leave_chat_room(Conversation *room)
@@ -2027,7 +2027,7 @@ static void ay_irc_leave_chat_room(Conversation *room)
 	if (strcasecmp(room->name, room_name))
 		irc_leave_chat_room(room->name, ila->ia);
 
-	ila->current_rooms = l_list_remove(ila->current_rooms, room);
+	ila->current_rooms = g_list_remove(ila->current_rooms, room);
 }
 
 static int ay_irc_send_chat_room_message(Conversation *room, char *message)
@@ -2071,7 +2071,7 @@ static void ay_irc_send_invite(eb_local_account *account, Conversation *room,
 	char *user, const char *message)
 {
 	char buff[BUF_LEN];
-	char *simple_user = strdup(user);
+	char *simple_user = g_strdup(user);
 	irc_local_account *ila =
 		(irc_local_account *)room->local_user->
 		protocol_local_account_data;
@@ -2084,7 +2084,7 @@ static void ay_irc_send_invite(eb_local_account *account, Conversation *room,
 
 	irc_send_invite(simple_user, room->name, message, ila->ia);
 
-	free(simple_user);
+	g_free(simple_user);
 
 	if (*message)
 		g_snprintf(buff, BUF_LEN, _(">>> Inviting %s [Message: %s] <<<"), user,
@@ -2134,7 +2134,7 @@ static void ay_irc_accept_invite(eb_local_account *account, void *invitation)
 	ay_irc_make_chat_room((char *)invitation, account, FALSE);
 
 	if (invitation) {
-		free(invitation);
+		g_free(invitation);
 		invitation = NULL;
 	}
 
@@ -2145,24 +2145,24 @@ static void ay_irc_accept_invite(eb_local_account *account, void *invitation)
 static void ay_irc_decline_invite(eb_local_account *account, void *invitation)
 {
 	if (invitation) {
-		free(invitation);
+		g_free(invitation);
 		invitation = NULL;
 	}
 }
 
-static void eb_irc_read_prefs_config(LList *values)
+static void eb_irc_read_prefs_config(GList *values)
 {
 	char *c;
 
 	if ((c = value_pair_get_value(values, "do_irc_debug"))) {
 		do_irc_debug = atoi(c);
-		free(c);
+		g_free(c);
 	}
 }
 
-static LList *eb_irc_write_prefs_config()
+static GList *eb_irc_write_prefs_config()
 {
-	LList *config = NULL;
+	GList *config = NULL;
 	char buffer[5];
 
 	sprintf(buffer, "%d", do_irc_debug);
@@ -2172,7 +2172,7 @@ static LList *eb_irc_write_prefs_config()
 }
 
 static void eb_irc_get_public_chatrooms(eb_local_account *ela,
-	void (*public_chatroom_callback) (LList *list, void *data), void *data)
+	void (*public_chatroom_callback) (GList *list, void *data), void *data)
 {
 	irc_local_account *ila =
 		(irc_local_account *)ela->protocol_local_account_data;
@@ -2202,7 +2202,7 @@ static void ay_got_motd(const char *motd, irc_message_prefix *prefix,
 	ay_conversation_display_notification(ecr, msg, IRC_MOTD);
 
 	if (msg) {
-		free(msg);
+		g_free(msg);
 		msg = NULL;
 	}
 }
