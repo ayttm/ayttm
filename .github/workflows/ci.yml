@@ -94,3 +94,27 @@ jobs:
 
       - name: Build
         run: make -j$(nproc)
+
+  test:
+    name: Unit tests (meson, ubuntu-22.04, gcc)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            meson ninja-build \
+            libglib2.0-dev libgtk2.0-dev \
+            libssl-dev libxml2-dev \
+            libenchant-2-dev \
+            flex bison gettext \
+            libtool libltdl-dev
+
+      - name: Configure (meson)
+        run: meson setup build
+
+      - name: Run tests
+        run: meson test -C build --print-errorlogs
